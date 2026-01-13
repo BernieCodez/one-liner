@@ -277,7 +277,7 @@ Create a one-liner that generates the first 10 Fibonacci numbers.
                 "description": "Should return first 10 Fibonacci numbers"
             }
         ],
-        "solution": "(lambda n: [0, 1] + [sum((fib := [0, 1] + [0]*(n-2))[i-2:i]) or fib.__setitem__(i, sum(fib[i-2:i])) or fib[i] for i in range(2, n)])[-1][:n] if n > 2 else [0, 1][:n])(10) if False else [0, 1] + [(lambda f: f(f, 10, 2, [0, 1]))(lambda f, n, i, acc: acc if i >= n else f(f, n, i+1, acc + [acc[-1] + acc[-2]]))]"
+        "solution": "[0, 1] + [(lambda f: f(f, 10, 2, [0, 1]))(lambda f, n, i, acc: acc if i >= n else f(f, n, i+1, acc + [acc[-1] + acc[-2]]))]"
     }
 ]
 
@@ -357,17 +357,41 @@ def execute_code():
             old_stdout = sys.stdout
             sys.stdout = StringIO()
             
-            # Execute code in a restricted namespace
+            # Execute code in a restricted namespace with only safe built-ins
+            safe_builtins = {
+                'range': range,
+                'sum': sum,
+                'all': all,
+                'any': any,
+                'map': map,
+                'filter': filter,
+                'list': list,
+                'dict': dict,
+                'set': set,
+                'int': int,
+                'float': float,
+                'str': str,
+                'len': len,
+                'max': max,
+                'min': min,
+                'sorted': sorted,
+                'enumerate': enumerate,
+                'zip': zip,
+                'abs': abs,
+                'round': round,
+                'pow': pow,
+            }
             namespace = {
-                '__builtins__': __builtins__,
+                '__builtins__': safe_builtins,
             }
             
-            # Set timeout (not available on all systems, will skip if not)
+            # Set timeout (Note: SIGALRM only works on Unix-like systems)
+            # On Windows, this timeout protection is not available
             try:
                 signal.signal(signal.SIGALRM, timeout_handler)
                 signal.alarm(2)  # 2 second timeout
             except (AttributeError, ValueError):
-                pass  # Windows doesn't support SIGALRM
+                pass  # Windows doesn't support SIGALRM - timeout not enforced
             
             result = eval(code, namespace)
             
