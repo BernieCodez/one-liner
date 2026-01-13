@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python One-Liner Challenges</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .header {
+            background: #2d2d30;
+            padding: 15px 30px;
+            border-bottom: 2px solid #007acc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #007acc;
+            font-size: 24px;
+        }
+
+        .challenge-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .challenge-nav button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .challenge-nav button:hover:not(:disabled) {
+            background: #1177bb;
+        }
+
+        .challenge-nav button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .left-panel {
+            width: 50%;
+            padding: 30px;
+            overflow-y: auto;
+            background: #252526;
+            border-right: 2px solid #007acc;
+        }
+
+        .right-panel {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+        }
+
+        .challenge-info {
+            margin-bottom: 20px;
+        }
+
+        .challenge-title {
+            color: #4ec9b0;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .difficulty.Easy {
+            background: #4caf50;
+            color: white;
+        }
+
+        .difficulty.Medium {
+            background: #ff9800;
+            color: white;
+        }
+
+        .difficulty.Hard {
+            background: #f44336;
+            color: white;
+        }
+
+        .description {
+            line-height: 1.8;
+            color: #d4d4d4;
+        }
+
+        .description h2 {
+            color: #4ec9b0;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .description code {
+            background: #1e1e1e;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ce9178;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .description pre {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+            border-left: 3px solid #007acc;
+        }
+
+        .description pre code {
+            background: none;
+            padding: 0;
+            color: #d4d4d4;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .editor-header {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-header h3 {
+            color: #4ec9b0;
+            font-size: 16px;
+        }
+
+        #code-editor {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: 2px solid #3e3e42;
+            border-radius: 5px;
+            resize: vertical;
+            outline: none;
+        }
+
+        #code-editor:focus {
+            border-color: #007acc;
+        }
+
+        .button-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #0e639c;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1177bb;
+        }
+
+        .btn-secondary {
+            background: #555;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #666;
+        }
+
+        .console {
+            flex: 1;
+            margin-top: 20px;
+            background: #1e1e1e;
+            border: 2px solid #3e3e42;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+        }
+
+        .console-header {
+            color: #4ec9b0;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .console-output {
+            color: #d4d4d4;
+        }
+
+        .test-result {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+
+        .test-result.passed {
+            background: #1e3a1e;
+            border-color: #4caf50;
+        }
+
+        .test-result.failed {
+            background: #3a1e1e;
+            border-color: #f44336;
+        }
+
+        .test-result-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .test-result.passed .test-result-header {
+            color: #4caf50;
+        }
+
+        .test-result.failed .test-result-header {
+            color: #f44336;
+        }
+
+        .test-details {
+            margin-top: 5px;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .success-message {
+            background: #1e3a1e;
+            color: #4caf50;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 4px solid #4caf50;
+            font-weight: bold;
+        }
+
+        .error-message {
+            background: #3a1e1e;
+            color: #f44336;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 4px solid #f44336;
+        }
+
+        .loading {
+            color: #007acc;
+            font-style: italic;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        .challenge-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .challenge-dropdown {
+            background: #2d2d30;
+            color: #d4d4d4;
+            border: 1px solid #007acc;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .challenge-dropdown:focus {
+            outline: none;
+            border-color: #1177bb;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐍 Python One-Liner Challenges</h1>
+        <div class="challenge-selector">
+            <select id="challenge-dropdown" class="challenge-dropdown">
+                <!-- Populated by JavaScript -->
+            </select>
+            <div class="challenge-nav">
+                <button id="prev-btn" onclick="previousChallenge()">← Previous</button>
+                <button id="next-btn" onclick="nextChallenge()">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="challenge-info">
+                <h2 class="challenge-title" id="challenge-title">Loading...</h2>
+                <span class="difficulty" id="challenge-difficulty"></span>
+            </div>
+            <div class="description" id="challenge-description">
+                Loading challenge...
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="editor-container">
+                <div class="editor-header">
+                    <h3>Python Editor</h3>
+                    <span style="color: #888; font-size: 12px;">Write your one-liner solution below</span>
+                </div>
+                <textarea id="code-editor" placeholder="Enter your Python one-liner here..."></textarea>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="runCode()">▶ Run Code</button>
+                    <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
+                </div>
+
+                <div class="console">
+                    <div class="console-header">Console Output</div>
+                    <div class="console-output" id="console-output">
+                        <p style="color: #888;">Run your code to see the results...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let challenges = [];
+        let currentChallengeId = 1;
+        let completedChallenges = new Set(JSON.parse(localStorage.getItem('completedChallenges') || '[]'));
+
+        // Initialize the app
+        async function init() {
+            await loadChallenges();
+            loadChallenge(currentChallengeId);
+        }
+
+        // Load list of challenges
+        async function loadChallenges() {
+            try {
+                const response = await fetch('/api/challenges');
+                challenges = await response.json();
+                
+                // Populate dropdown
+                const dropdown = document.getElementById('challenge-dropdown');
+                dropdown.innerHTML = challenges.map(c => 
+                    `<option value="${c.id}">Challenge ${c.id}: ${c.title} (${c.difficulty})</option>`
+                ).join('');
+                
+                dropdown.addEventListener('change', (e) => {
+                    currentChallengeId = parseInt(e.target.value);
+                    loadChallenge(currentChallengeId);
+                });
+            } catch (error) {
+                console.error('Error loading challenges:', error);
+            }
+        }
+
+        // Load a specific challenge
+        async function loadChallenge(challengeId) {
+            try {
+                const response = await fetch(`/api/challenge/${challengeId}`);
+                const challenge = await response.json();
+                
+                document.getElementById('challenge-title').textContent = challenge.title;
+                document.getElementById('challenge-difficulty').textContent = challenge.difficulty;
+                document.getElementById('challenge-difficulty').className = `difficulty ${challenge.difficulty}`;
+                
+                // Convert markdown-like description to HTML
+                const descriptionHtml = challenge.description
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/```python\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                    .replace(/```\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>');
+                
+                document.getElementById('challenge-description').innerHTML = '<p>' + descriptionHtml + '</p>';
+                
+                // Update dropdown
+                document.getElementById('challenge-dropdown').value = challengeId;
+                
+                // Update navigation buttons
+                document.getElementById('prev-btn').disabled = challengeId === 1;
+                document.getElementById('next-btn').disabled = challengeId === challenges.length;
+                
+                // Clear console
+                document.getElementById('console-output').innerHTML = '<p style="color: #888;">Run your code to see the results...</p>';
+                
+            } catch (error) {
+                console.error('Error loading challenge:', error);
+            }
+        }
+
+        // Run the code
+        async function runCode() {
+            const code = document.getElementById('code-editor').value.trim();
+            const consoleOutput = document.getElementById('console-output');
+            
+            if (!code) {
+                consoleOutput.innerHTML = '<div class="error-message">Please enter some code first!</div>';
+                return;
+            }
+            
+            consoleOutput.innerHTML = '<p class="loading">Running your code...</p>';
+            
+            try {
+                const response = await fetch('/api/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        challenge_id: currentChallengeId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    consoleOutput.innerHTML = `<div class="error-message">${result.error}</div>`;
+                    return;
+                }
+                
+                let html = '';
+                
+                if (result.passed) {
+                    html += '<div class="success-message">🎉 All tests passed! Great job!</div>';
+                    
+                    // Mark challenge as completed
+                    completedChallenges.add(currentChallengeId);
+                    localStorage.setItem('completedChallenges', JSON.stringify([...completedChallenges]));
+                    
+                    // Suggest next challenge
+                    if (currentChallengeId < challenges.length) {
+                        html += '<div style="margin-top: 10px; color: #888;">Click "Next →" to try the next challenge!</div>';
+                    } else {
+                        html += '<div style="margin-top: 10px; color: #888;">🏆 You\'ve completed all challenges!</div>';
+                    }
+                }
+                
+                result.results.forEach(test => {
+                    const passed = test.passed;
+                    const className = passed ? 'passed' : 'failed';
+                    const icon = passed ? '✓' : '✗';
+                    
+                    html += `<div class="test-result ${className}">`;
+                    html += `<div class="test-result-header">${icon} ${test.description}</div>`;
+                    
+                    if (passed) {
+                        html += `<div class="test-details">Expected: ${JSON.stringify(test.expected)}</div>`;
+                        html += `<div class="test-details">Got: ${JSON.stringify(test.actual)}</div>`;
+                    } else if (test.error) {
+                        html += `<div class="test-details">Error: ${test.error}</div>`;
+                    } else {
+                        html += `<div class="test-details">Expected: ${JSON.stringify(test.expected)}</div>`;
+                        html += `<div class="test-details">Got: ${JSON.stringify(test.actual)}</div>`;
+                    }
+                    
+                    html += '</div>';
+                });
+                
+                consoleOutput.innerHTML = html;
+                
+            } catch (error) {
+                consoleOutput.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Clear the editor
+        function clearEditor() {
+            document.getElementById('code-editor').value = '';
+            document.getElementById('console-output').innerHTML = '<p style="color: #888;">Run your code to see the results...</p>';
+        }
+
+        // Navigation functions
+        function nextChallenge() {
+            if (currentChallengeId < challenges.length) {
+                currentChallengeId++;
+                loadChallenge(currentChallengeId);
+                clearEditor();
+            }
+        }
+
+        function previousChallenge() {
+            if (currentChallengeId > 1) {
+                currentChallengeId--;
+                loadChallenge(currentChallengeId);
+                clearEditor();
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter to run code
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+</html>
