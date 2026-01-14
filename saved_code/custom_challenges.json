@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1000,
+    "title": "Speedy Libs",
+    "difficulty": "Medium",
+    "description": "**Task:**\nGiven a singular word and a line of text, replace all \u2018{insert}\u2019s with the given word. \n\n**Input:**\nHello\n{insert} World!\n\n**Output:**\nHello World!\n\n**Explanation:**\nThe substring \u2018{insert}\u2019 is replaced by the word \u2018Hello\u2019 resulting in a sentence of \u2018Hello World!\u2019.\n",
+    "test_cases": [
+      {
+        "input": "Hello\n{insert} World!",
+        "expected": "Hello World!",
+        "description": "Test case 1"
+      }
+    ],
+    "solution": "",
+    "custom": true
+  }
+]

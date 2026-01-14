@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python One-Liner Challenges</title>
+    <title>Python Coding Challenges</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -62,21 +63,108 @@
         .container {
             display: flex;
             height: calc(100vh - 60px);
+            position: relative;
         }
 
-        .left-panel {
-            width: 50%;
-            padding: 30px;
-            overflow-y: auto;
+        /* Draggable Panel System */
+        .panel {
+            position: relative;
             background: #252526;
-            border-right: 2px solid #007acc;
-        }
-
-        .right-panel {
-            width: 50%;
+            border: 2px solid #3e3e42;
             display: flex;
             flex-direction: column;
-            background: #1e1e1e;
+            min-width: 200px;
+            min-height: 200px;
+        }
+
+        .panel-header {
+            background: #2d2d30;
+            padding: 8px 12px;
+            border-bottom: 2px solid #007acc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .panel-header:active {
+            cursor: grabbing;
+        }
+
+        .panel-header.dragging {
+            opacity: 0.5;
+        }
+
+        .panel-title {
+            color: #4ec9b0;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+        }
+
+        .drop-zone {
+            position: absolute;
+            background: rgba(0, 122, 204, 0.2);
+            border: 2px dashed #007acc;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        .drop-zone.active {
+            display: block;
+        }
+
+        .layout-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .layout-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-width: 0;
+        }
+
+        .layout-row {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .layout-column {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* Panel specific styles */
+        #description-panel .panel-content {
+            padding: 30px;
+        }
+
+        #editor-panel .panel-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #console-panel .panel-content {
+            display: flex;
+            flex-direction: column;
         }
 
         .challenge-info {
@@ -169,20 +257,38 @@
 
         #code-editor {
             width: 100%;
-            height: 120px;
-            padding: 15px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
-            background: #1e1e1e;
-            color: #d4d4d4;
+            flex: 1;
+            min-height: 200px;
             border: 2px solid #3e3e42;
             border-radius: 5px;
-            resize: vertical;
-            outline: none;
         }
 
-        #code-editor:focus {
+        .editor-toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .theme-selector {
+            background: #2d2d30;
+            color: #d4d4d4;
+            border: 1px solid #3e3e42;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .theme-selector:focus {
+            outline: none;
             border-color: #007acc;
+        }
+
+        .editor-info {
+            color: #888;
+            font-size: 11px;
+            margin-left: auto;
         }
 
         .button-group {
@@ -225,21 +331,19 @@
             background: #1e1e1e;
             border: 2px solid #3e3e42;
             border-radius: 5px;
-            padding: 15px;
             overflow-y: auto;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 13px;
         }
 
         .console-header {
-            color: #4ec9b0;
-            margin-bottom: 10px;
-            font-size: 16px;
-            font-weight: bold;
+            display: none; /* Hidden since we have panel headers now */
         }
 
         .console-output {
             color: #d4d4d4;
+            height: 100%;
+            overflow-y: auto;
         }
 
         .test-result {
@@ -339,60 +443,941 @@
             outline: none;
             border-color: #1177bb;
         }
+
+        /* Settings Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #2d2d30;
+            padding: 0;
+            border-radius: 8px;
+            border: 2px solid #007acc;
+            width: 600px;
+            max-width: 90%;
+            max-height: 80vh;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-content-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            border-bottom: 2px solid #007acc;
+            background: #2d2d30;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-header h2 {
+            color: #4ec9b0;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #d4d4d4;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #f44336;
+        }
+
+        .settings-section {
+            margin-bottom: 25px;
+        }
+
+        .settings-section h3 {
+            color: #007acc;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .setting-label {
+            color: #d4d4d4;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .setting-control {
+            flex: 0 0 200px;
+        }
+
+        .setting-control select,
+        .setting-control input[type="number"] {
+            width: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: 1px solid #3e3e42;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .setting-control select:focus,
+        .setting-control input:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        .setting-control input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .save-settings-btn {
+            width: 100%;
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .save-settings-btn:hover {
+            background: #1177bb;
+        }
+
+        .settings-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background 0.3s;
+            margin-left: 10px;
+        }
+
+        .settings-btn:hover {
+            background: #666;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+
+        .status-indicator.saved {
+            background: #1e3a1e;
+            color: #4caf50;
+        }
+
+        .status-indicator.saving {
+            background: #2d2d30;
+            color: #888;
+        }
+
+        .info-text {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Panel Drag Visual Feedback */
+        .panel-ghost {
+            position: fixed;
+            background: #2d2d30;
+            border: 2px solid #007acc;
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 10000;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #4ec9b0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .drop-indicator {
+            position: absolute;
+            background: rgba(0, 122, 204, 0.3);
+            border: 2px solid #007acc;
+            pointer-events: none;
+            z-index: 999;
+            transition: all 0.2s;
+        }
+
+        /* Layout preset buttons */
+        .layout-presets {
+            display: flex;
+            gap: 5px;
+            margin-left: auto;
+        }
+
+        .layout-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 11px;
+            transition: background 0.3s;
+        }
+
+        .layout-btn:hover {
+            background: #666;
+        }
+
+        .layout-btn.active {
+            background: #007acc;
+        }
+
+        /* Panel resize dividers */
+        .resize-divider {
+            background: #3e3e42;
+            transition: background 0.2s;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .resize-divider.horizontal {
+            height: 4px;
+            cursor: row-resize;
+            width: 100%;
+        }
+
+        .resize-divider.vertical {
+            width: 4px;
+            cursor: col-resize;
+            height: 100%;
+        }
+
+        .resize-divider:hover,
+        .resize-divider.resizing {
+            background: #007acc;
+        }
+
+        /* Resize handle indicator */
+        .resize-handle-indicator {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 20px;
+            height: 20px;
+            cursor: nwse-resize;
+            background: linear-gradient(135deg, transparent 0%, transparent 50%, #007acc 50%, #007acc 100%);
+            border-radius: 0 0 8px 0;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🐍 Python One-Liner Challenges</h1>
+        <h1>🐍 Python Coding Challenges</h1>
         <div class="challenge-selector">
             <select id="challenge-dropdown" class="challenge-dropdown">
                 <!-- Populated by JavaScript -->
             </select>
             <div class="challenge-nav">
-                <button id="prev-btn" onclick="previousChallenge()">← Previous</button>
-                <button id="next-btn" onclick="nextChallenge()">Next →</button>
+                <button id="prev-btn" onclick="previousChallenge()"><i class="fas fa-chevron-left"></i> Previous</button>
+                <button id="next-btn" onclick="nextChallenge()">Next <i class="fas fa-chevron-right"></i></button>
+                <button class="settings-btn" onclick="openSettings()"><i class="fas fa-cog"></i> Settings</button>
+                <button class="settings-btn" onclick="window.location.href='/creator'" style="background: #28a745;"><i class="fas fa-plus"></i> Create Challenge</button>
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <div class="left-panel">
-            <div class="challenge-info">
-                <h2 class="challenge-title" id="challenge-title">Loading...</h2>
-                <span class="difficulty" id="challenge-difficulty"></span>
+    <div class="container" id="main-container">
+        <!-- Layout will be dynamically generated by JavaScript -->
+    </div>
+
+    <!-- Hidden panel templates -->
+    <template id="description-template">
+        <div class="panel" id="description-panel" data-panel-id="description">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-clipboard"></i> Problem Description</div>
             </div>
-            <div class="description" id="challenge-description">
-                Loading challenge...
+            <div class="panel-content">
+                <div class="challenge-info">
+                    <h2 class="challenge-title" id="challenge-title">Loading...</h2>
+                    <span class="difficulty" id="challenge-difficulty"></span>
+                </div>
+                <div class="description" id="challenge-description">
+                    Loading challenge...
+                </div>
             </div>
         </div>
+    </template>
 
-        <div class="right-panel">
-            <div class="editor-container">
-                <div class="editor-header">
-                    <h3>Python Editor</h3>
-                    <span style="color: #888; font-size: 12px;">Write your one-liner solution below (Ctrl/Cmd + Enter to run)</span>
+    <template id="editor-template">
+        <div class="panel" id="editor-panel" data-panel-id="editor">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-code"></i> Python Editor</div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span id="save-status" class="status-indicator"></span>
+                    <span style="color: #888; font-size: 11px;">Ctrl/Cmd + Enter to run</span>
                 </div>
-                <textarea id="code-editor" placeholder="Enter your Python one-liner here..."></textarea>
+            </div>
+            <div class="panel-content">
+                <div class="editor-toolbar">
+                    <span class="editor-info">Monaco Editor • Python 3</span>
+                </div>
+                <div id="code-editor"></div>
                 
                 <div class="button-group">
-                    <button class="btn btn-primary" onclick="runCode()">▶ Run Code</button>
-                    <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
+                    <button class="btn btn-primary" onclick="runCode()"><i class="fas fa-play"></i> Run Code</button>
+                    <button class="btn btn-secondary" onclick="clearEditor()"><i class="fas fa-eraser"></i> Clear</button>
                 </div>
+            </div>
+        </div>
+    </template>
 
-                <div class="console">
-                    <div class="console-header">Console Output</div>
-                    <div class="console-output" id="console-output">
-                        <p style="color: #888;">Run your code to see the results...</p>
+    <template id="console-template">
+        <div class="panel" id="console-panel" data-panel-id="console">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-terminal"></i> Console Output</div>
+            </div>
+            <div class="panel-content">
+                <div class="console-output" id="console-output" style="padding: 15px;">
+                    <p style="color: #888;">Run your code to see the results...</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content" id="modal-content">
+            <div class="modal-header" id="modal-header">
+                <h2>⚙️ Editor Settings</h2>
+                <button class="close-btn" onclick="closeSettings()">&times;</button>
+            </div>
+
+            <div class="modal-content-body">
+            <div class="settings-section">
+                <h3>Appearance</h3>
+                <div class="setting-item">
+                    <div class="setting-label">Color Theme</div>
+                    <div class="setting-control">
+                        <select id="settings-theme">
+                            <option value="vs-dark">VS Dark (Default)</option>
+                            <option value="vs">VS Light</option>
+                            <option value="hc-black">High Contrast</option>
+                            <option value="hc-light">High Contrast Light</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">Font Size</div>
+                    <div class="setting-control">
+                        <input type="number" id="settings-font-size" min="10" max="24" value="14">
                     </div>
                 </div>
             </div>
+
+            <div class="settings-section">
+                <h3>Editor Behavior</h3>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        Tab Size (Indentation)
+                        <div class="info-text">Number of spaces for each indentation level</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" id="settings-tab-size" min="2" max="8" value="4">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        Insert Spaces
+                        <div class="info-text">Use spaces instead of tab character</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" id="settings-insert-spaces" checked>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        Word Wrap
+                        <div class="info-text">Wrap long lines to fit in editor</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="settings-word-wrap">
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                            <option value="wordWrapColumn">At Column</option>
+                            <option value="bounded">Bounded</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Features</h3>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        Minimap
+                        <div class="info-text">Show code overview on the right</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" id="settings-minimap" checked>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        Line Numbers
+                        <div class="info-text">Display line numbers</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="settings-line-numbers">
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                            <option value="relative">Relative</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        Format On Paste
+                        <div class="info-text">Automatically format code when pasting</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="checkbox" id="settings-format-on-paste" checked>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Layout Presets</h3>
+                <div class="setting-label">
+                    <div class="info-text">Choose a layout preset for your workspace</div>
+                </div>
+                <div class="layout-preset-buttons" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                    <button class="btn" onclick="applyLayout('side-by-side')" style="flex: 1; min-width: 45%;">
+                        <i class="fas fa-columns"></i> Side by Side
+                    </button>
+                    <button class="btn" onclick="applyLayout('stacked')" style="flex: 1; min-width: 45%;">
+                        <i class="fas fa-align-justify"></i> Stacked
+                    </button>
+                    <button class="btn" onclick="applyLayout('three-column')" style="flex: 1; min-width: 45%;">
+                        <i class="fas fa-th"></i> 3 Columns
+                    </button>
+                    <button class="btn" onclick="applyLayout('focus-editor')" style="flex: 1; min-width: 45%;">
+                        <i class="fas fa-edit"></i> Focus Editor
+                    </button>
+                </div>
+            </div>
+
+            <button class="save-settings-btn" onclick="applySettings()">Apply Settings</button>
+            </div>
         </div>
     </div>
 
+    <!-- Load Monaco Editor from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
     <script>
         let challenges = [];
         let currentChallengeId = 1;
         let completedChallenges = new Set(JSON.parse(localStorage.getItem('completedChallenges') || '[]'));
+        let editor; // Monaco Editor instance
+        let autoSaveTimer = null;
+        let savedEditorValue = '# Write your Python code here...\n'; // Store editor value globally
+        let editorSettings = {
+            theme: 'vs-dark',
+            fontSize: 14,
+            tabSize: 4,
+            insertSpaces: true,
+            wordWrap: 'on',
+            minimap: true,
+            lineNumbers: 'on',
+            formatOnPaste: true
+        };
+
+        // Initialize Monaco Editor
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+        
+        require(['vs/editor/editor.main'], function () {
+            // Register Python built-in functions and standard library completions
+            monaco.languages.registerCompletionItemProvider('python', {
+                provideCompletionItems: (model, position) => {
+                    // Get the text before the cursor on the current line
+                    const textUntilPosition = model.getValueInRange({
+                        startLineNumber: position.lineNumber,
+                        startColumn: 1,
+                        endLineNumber: position.lineNumber,
+                        endColumn: position.column
+                    });
+                    
+                    // Get the word being typed (the current partial word)
+                    const word = model.getWordUntilPosition(position);
+                    const wordPrefix = word.word.toLowerCase();
+                    
+                    // Calculate the range to replace (the word being typed)
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn
+                    };
+                    
+                    const suggestions = [];
+                    
+                    // Python built-in functions with documentation
+                    const builtins = [
+                        { label: 'print', detail: 'print(*values, sep=" ", end="\\n")', doc: 'Print values to stdout' },
+                        { label: 'input', detail: 'input(prompt="")', doc: 'Read a line from input' },
+                        { label: 'len', detail: 'len(obj)', doc: 'Return the length of an object' },
+                        { label: 'range', detail: 'range(start, stop, step)', doc: 'Return a sequence of numbers' },
+                        { label: 'map', detail: 'map(function, iterable)', doc: 'Apply function to every item' },
+                        { label: 'filter', detail: 'filter(function, iterable)', doc: 'Filter items by function' },
+                        { label: 'sum', detail: 'sum(iterable, start=0)', doc: 'Sum all items in iterable' },
+                        { label: 'max', detail: 'max(iterable)', doc: 'Return the largest item' },
+                        { label: 'min', detail: 'min(iterable)', doc: 'Return the smallest item' },
+                        { label: 'sorted', detail: 'sorted(iterable, reverse=False)', doc: 'Return a sorted list' },
+                        { label: 'enumerate', detail: 'enumerate(iterable, start=0)', doc: 'Return enumerate object' },
+                        { label: 'zip', detail: 'zip(*iterables)', doc: 'Combine iterables element-wise' },
+                        { label: 'list', detail: 'list(iterable)', doc: 'Convert to list' },
+                        { label: 'tuple', detail: 'tuple(iterable)', doc: 'Convert to tuple' },
+                        { label: 'dict', detail: 'dict(**kwargs)', doc: 'Create a dictionary' },
+                        { label: 'set', detail: 'set(iterable)', doc: 'Create a set' },
+                        { label: 'str', detail: 'str(object)', doc: 'Convert to string' },
+                        { label: 'int', detail: 'int(x, base=10)', doc: 'Convert to integer' },
+                        { label: 'float', detail: 'float(x)', doc: 'Convert to float' },
+                        { label: 'bool', detail: 'bool(x)', doc: 'Convert to boolean' },
+                        { label: 'abs', detail: 'abs(x)', doc: 'Return absolute value' },
+                        { label: 'round', detail: 'round(number, ndigits)', doc: 'Round a number' },
+                        { label: 'pow', detail: 'pow(base, exp, mod)', doc: 'Return base to the power exp' },
+                        { label: 'all', detail: 'all(iterable)', doc: 'Return True if all elements are true' },
+                        { label: 'any', detail: 'any(iterable)', doc: 'Return True if any element is true' },
+                        { label: 'open', detail: 'open(file, mode="r")', doc: 'Open a file' },
+                        { label: 'type', detail: 'type(object)', doc: 'Return type of object' },
+                        { label: 'isinstance', detail: 'isinstance(obj, classinfo)', doc: 'Check if object is instance' },
+                        { label: 'reversed', detail: 'reversed(seq)', doc: 'Return reversed iterator' },
+                        { label: 'join', detail: 'str.join(iterable)', doc: 'Join strings in iterable' },
+                        { label: 'split', detail: 'str.split(sep)', doc: 'Split string into list' },
+                    ];
+
+                    // Filter and add built-in functions
+                    builtins.forEach(item => {
+                        if (item.label.toLowerCase().startsWith(wordPrefix)) {
+                            suggestions.push({
+                                label: item.label,
+                                kind: monaco.languages.CompletionItemKind.Function,
+                                detail: item.detail,
+                                documentation: item.doc,
+                                insertText: item.label,
+                                sortText: '0' + item.label, // Sort builtins higher
+                                range: range
+                            });
+                        }
+                    });
+
+                    // Common Python snippets (only show at beginning of statement)
+                    const isStartOfStatement = textUntilPosition.trim() === wordPrefix || 
+                                              textUntilPosition.match(/^\s*\w*$/) ||
+                                              textUntilPosition.match(/:\s*\w*$/);
+                    
+                    if (isStartOfStatement) {
+                        const snippets = [
+                            { label: 'for', insertText: 'for ${1:item} in ${2:iterable}:\n    ${3:pass}', doc: 'For loop' },
+                            { label: 'while', insertText: 'while ${1:condition}:\n    ${2:pass}', doc: 'While loop' },
+                            { label: 'if', insertText: 'if ${1:condition}:\n    ${2:pass}', doc: 'If statement' },
+                            { label: 'elif', insertText: 'elif ${1:condition}:\n    ${2:pass}', doc: 'Elif statement' },
+                            { label: 'else', insertText: 'else:\n    ${1:pass}', doc: 'Else statement' },
+                            { label: 'def', insertText: 'def ${1:function_name}(${2:params}):\n    ${3:pass}', doc: 'Define function' },
+                            { label: 'class', insertText: 'class ${1:ClassName}:\n    def __init__(self${2:, params}):\n        ${3:pass}', doc: 'Define class' },
+                            { label: 'try', insertText: 'try:\n    ${1:pass}\nexcept ${2:Exception} as ${3:e}:\n    ${4:pass}', doc: 'Try-except block' },
+                            { label: 'with', insertText: 'with ${1:expression} as ${2:variable}:\n    ${3:pass}', doc: 'With statement' },
+                            { label: 'lambda', insertText: 'lambda ${1:x}: ${2:x}', doc: 'Lambda function' },
+                        ];
+
+                        snippets.forEach(item => {
+                            if (item.label.toLowerCase().startsWith(wordPrefix)) {
+                                suggestions.push({
+                                    label: item.label,
+                                    kind: monaco.languages.CompletionItemKind.Snippet,
+                                    documentation: item.doc,
+                                    insertText: item.insertText,
+                                    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                    sortText: '1' + item.label, // Sort snippets after builtins
+                                    range: range
+                                });
+                            }
+                        });
+                    }
+
+                    // Common standard library imports (only at start of line)
+                    if (textUntilPosition.trim().startsWith('import') || 
+                        textUntilPosition.trim().startsWith('from') ||
+                        wordPrefix === 'import' || wordPrefix === 'from' ||
+                        textUntilPosition.trim() === '') {
+                        const imports = [
+                            { label: 'import sys', doc: 'System-specific parameters and functions' },
+                            { label: 'import math', doc: 'Mathematical functions' },
+                            { label: 'import random', doc: 'Random number generation' },
+                            { label: 'import re', doc: 'Regular expressions' },
+                            { label: 'import os', doc: 'Operating system interface' },
+                            { label: 'import json', doc: 'JSON encoder and decoder' },
+                            { label: 'import datetime', doc: 'Date and time functions' },
+                            { label: 'import itertools', doc: 'Iterator functions' },
+                            { label: 'import collections', doc: 'Container datatypes' },
+                            { label: 'from collections import Counter', doc: 'Count hashable objects' },
+                            { label: 'from collections import defaultdict', doc: 'Dictionary with default values' },
+                        ];
+
+                        imports.forEach(item => {
+                            const searchText = textUntilPosition.trim() || wordPrefix;
+                            if (item.label.toLowerCase().includes(searchText.toLowerCase())) {
+                                suggestions.push({
+                                    label: item.label,
+                                    kind: monaco.languages.CompletionItemKind.Module,
+                                    documentation: item.doc,
+                                    insertText: item.label,
+                                    sortText: '2' + item.label, // Sort imports last
+                                    range: {
+                                        startLineNumber: position.lineNumber,
+                                        endLineNumber: position.lineNumber,
+                                        startColumn: 1,
+                                        endColumn: position.column
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    return { suggestions: suggestions };
+                }
+            });
+
+            // Create the editor instance
+            initializeMonacoEditor();
+
+            // Initialize the app after editor is ready
+            loadEditorSettings();
+            init();
+        });
+
+        // Initialize Monaco Editor (can be called when recreating editor)
+        function initializeMonacoEditor() {
+            const editorDiv = document.getElementById('code-editor');
+            if (!editorDiv) return;
+
+            // Save current value if editor exists
+            if (editor) {
+                savedEditorValue = editor.getValue();
+                editor.dispose();
+                editor = null;
+            }
+            
+            editor = monaco.editor.create(editorDiv, {
+                value: savedEditorValue,
+                language: 'python',
+                theme: editorSettings.theme,
+                automaticLayout: true,
+                fontSize: editorSettings.fontSize,
+                tabSize: editorSettings.tabSize,
+                insertSpaces: editorSettings.insertSpaces,
+                minimap: {
+                    enabled: editorSettings.minimap
+                },
+                scrollBeyondLastLine: false,
+                wordWrap: editorSettings.wordWrap,
+                lineNumbers: editorSettings.lineNumbers,
+                renderLineHighlight: 'all',
+                autoIndent: 'full',
+                formatOnPaste: editorSettings.formatOnPaste,
+                formatOnType: true,
+                suggestOnTriggerCharacters: true,
+                quickSuggestions: {
+                    other: true,
+                    comments: false,
+                    strings: true
+                },
+                parameterHints: {
+                    enabled: true
+                },
+                acceptSuggestionOnCommitCharacter: true,
+                tabCompletion: 'on',
+                snippetSuggestions: 'top',
+                wordBasedSuggestions: true,
+                suggest: {
+                    showWords: true,
+                    showSnippets: true,
+                    showFunctions: true,
+                    showClasses: true,
+                    showModules: true
+                },
+                bracketPairColorization: {
+                    enabled: true
+                }
+            });
+
+            // Add keyboard shortcut for running code (Ctrl/Cmd + Enter)
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function() {
+                runCode();
+            });
+
+            // Add auto-save on content change - always enabled for reliability
+            editor.onDidChangeModelContent(() => {
+                savedEditorValue = editor.getValue(); // Update global saved value
+                scheduleAutoSave();
+            });
+        }
+
+        // Schedule auto-save (now always active for reliability)
+        function scheduleAutoSave() {
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            updateSaveStatus('saving');
+            autoSaveTimer = setTimeout(async () => {
+                await saveCodeToLocalStorage();
+                await saveCodeToServer();
+                updateSaveStatus('saved');
+            }, 1500); // Save after 1.5 seconds of inactivity
+        }
+
+        // Update save status indicator
+        function updateSaveStatus(status) {
+            const indicator = document.getElementById('save-status');
+            if (status === 'saved') {
+                indicator.textContent = '✓ Saved';
+                indicator.className = 'status-indicator saved';
+                setTimeout(() => {
+                    indicator.textContent = '';
+                    indicator.className = 'status-indicator';
+                }, 2000);
+            } else if (status === 'saving') {
+                indicator.textContent = 'Saving...';
+                indicator.className = 'status-indicator saving';
+            }
+        }
+
+        // Save code to localStorage
+        function saveCodeToLocalStorage() {
+            const code = editor.getValue();
+            const key = `code_challenge_${currentChallengeId}`;
+            localStorage.setItem(key, code);
+        }
+
+        // Load code from localStorage
+        function loadCodeFromLocalStorage() {
+            const key = `code_challenge_${currentChallengeId}`;
+            const savedCode = localStorage.getItem(key);
+            if (savedCode) {
+                editor.setValue(savedCode);
+            } else {
+                editor.setValue('# Write your Python code here...\n');
+            }
+        }
+
+        // Save code to server
+        async function saveCodeToServer() {
+            const code = editor.getValue();
+            try {
+                const response = await fetch('/api/save-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        challenge_id: currentChallengeId,
+                        code: code
+                    })
+                });
+                
+                if (response.ok) {
+                    updateSaveStatus('saved');
+                }
+            } catch (error) {
+                console.error('Error saving code to server:', error);
+            }
+        }
+
+        // Load code from server
+        async function loadCodeFromServer() {
+            try {
+                const response = await fetch(`/api/load-code/${currentChallengeId}`);
+                const data = await response.json();
+                
+                if (data.code) {
+                    editor.setValue(data.code);
+                } else {
+                    // If no server code, try localStorage
+                    loadCodeFromLocalStorage();
+                }
+            } catch (error) {
+                console.error('Error loading code from server:', error);
+                // Fallback to localStorage
+                loadCodeFromLocalStorage();
+            }
+        }
+
+        // Settings Modal Functions
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('show');
+            // Load current settings into modal
+            document.getElementById('settings-theme').value = editorSettings.theme;
+            document.getElementById('settings-font-size').value = editorSettings.fontSize;
+            document.getElementById('settings-tab-size').value = editorSettings.tabSize;
+            document.getElementById('settings-insert-spaces').checked = editorSettings.insertSpaces;
+            document.getElementById('settings-word-wrap').value = editorSettings.wordWrap;
+            document.getElementById('settings-minimap').checked = editorSettings.minimap;
+            document.getElementById('settings-line-numbers').value = editorSettings.lineNumbers;
+            document.getElementById('settings-format-on-paste').checked = editorSettings.formatOnPaste;
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('show');
+        }
+
+        function applySettings() {
+            // Read settings from modal
+            editorSettings.theme = document.getElementById('settings-theme').value;
+            editorSettings.fontSize = parseInt(document.getElementById('settings-font-size').value);
+            editorSettings.tabSize = parseInt(document.getElementById('settings-tab-size').value);
+            editorSettings.insertSpaces = document.getElementById('settings-insert-spaces').checked;
+            editorSettings.wordWrap = document.getElementById('settings-word-wrap').value;
+            editorSettings.minimap = document.getElementById('settings-minimap').checked;
+            editorSettings.lineNumbers = document.getElementById('settings-line-numbers').value;
+            editorSettings.formatOnPaste = document.getElementById('settings-format-on-paste').checked;
+
+            // Apply settings to editor
+            monaco.editor.setTheme(editorSettings.theme);
+            editor.updateOptions({
+                fontSize: editorSettings.fontSize,
+                tabSize: editorSettings.tabSize,
+                insertSpaces: editorSettings.insertSpaces,
+                wordWrap: editorSettings.wordWrap,
+                minimap: { enabled: editorSettings.minimap },
+                lineNumbers: editorSettings.lineNumbers,
+                formatOnPaste: editorSettings.formatOnPaste
+            });
+
+            // Save settings to localStorage and server
+            localStorage.setItem('editorSettings', JSON.stringify(editorSettings));
+            saveSettingsToServer();
+
+            closeSettings();
+        }
+
+        function loadEditorSettings() {
+            // Load from localStorage
+            const savedSettings = localStorage.getItem('editorSettings');
+            if (savedSettings) {
+                editorSettings = { ...editorSettings, ...JSON.parse(savedSettings) };
+            }
+
+            // Try to load from server
+            loadSettingsFromServer();
+        }
+
+        async function saveSettingsToServer() {
+            try {
+                await fetch('/api/save-settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(editorSettings)
+                });
+            } catch (error) {
+                console.error('Error saving settings to server:', error);
+            }
+        }
+
+        async function loadSettingsFromServer() {
+            try {
+                const response = await fetch('/api/load-settings');
+                const serverSettings = await response.json();
+                
+                if (Object.keys(serverSettings).length > 0) {
+                    editorSettings = { ...editorSettings, ...serverSettings };
+                    // Apply loaded settings if editor exists
+                    if (editor) {
+                        monaco.editor.setTheme(editorSettings.theme);
+                        editor.updateOptions({
+                            fontSize: editorSettings.fontSize,
+                            tabSize: editorSettings.tabSize,
+                            insertSpaces: editorSettings.insertSpaces,
+                            wordWrap: editorSettings.wordWrap,
+                            minimap: { enabled: editorSettings.minimap },
+                            lineNumbers: editorSettings.lineNumbers,
+                            formatOnPaste: editorSettings.formatOnPaste
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings from server:', error);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('settings-modal');
+            if (event.target === modal) {
+                closeSettings();
+            }
+        };
+
+        // Change editor theme (kept for backward compatibility)
+        function changeTheme() {
+            const theme = document.getElementById('theme-selector').value;
+            monaco.editor.setTheme(theme);
+            localStorage.setItem('editorTheme', theme);
+        }
+
+        // Load saved theme preference (kept for backward compatibility)
+        window.addEventListener('load', () => {
+            const savedTheme = localStorage.getItem('editorTheme') || 'vs-dark';
+            if (document.getElementById('theme-selector')) {
+                document.getElementById('theme-selector').value = savedTheme;
+            }
+        });
 
         // Initialize the app
         async function init() {
@@ -422,14 +1407,21 @@
         }
 
         // Load a specific challenge
-        async function loadChallenge(challengeId) {
+        // Helper function to load challenge content into description panel
+        async function loadChallengeContent(challengeId) {
             try {
                 const response = await fetch(`/api/challenge/${challengeId}`);
                 const challenge = await response.json();
                 
-                document.getElementById('challenge-title').textContent = challenge.title;
-                document.getElementById('challenge-difficulty').textContent = challenge.difficulty;
-                document.getElementById('challenge-difficulty').className = `difficulty ${challenge.difficulty}`;
+                const titleEl = document.getElementById('challenge-title');
+                const difficultyEl = document.getElementById('challenge-difficulty');
+                const descriptionEl = document.getElementById('challenge-description');
+                
+                if (!titleEl || !difficultyEl || !descriptionEl) return;
+                
+                titleEl.textContent = challenge.title;
+                difficultyEl.textContent = challenge.difficulty;
+                difficultyEl.className = `difficulty ${challenge.difficulty}`;
                 
                 // Convert markdown-like description to HTML
                 const descriptionHtml = challenge.description
@@ -441,7 +1433,18 @@
                     .replace(/```\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
                     .replace(/`([^`]+)`/g, '<code>$1</code>');
                 
-                document.getElementById('challenge-description').innerHTML = '<p>' + descriptionHtml + '</p>';
+                descriptionEl.innerHTML = '<p>' + descriptionHtml + '</p>';
+            } catch (error) {
+                console.error('Error loading challenge content:', error);
+            }
+        }
+
+        async function loadChallenge(challengeId) {
+            try {
+                currentChallengeId = challengeId;
+                
+                // Load challenge content
+                await loadChallengeContent(challengeId);
                 
                 // Update dropdown
                 document.getElementById('challenge-dropdown').value = challengeId;
@@ -453,6 +1456,9 @@
                 // Clear console
                 document.getElementById('console-output').innerHTML = '<p style="color: #888;">Run your code to see the results...</p>';
                 
+                // Load saved code from server or localStorage
+                await loadCodeFromServer();
+                
             } catch (error) {
                 console.error('Error loading challenge:', error);
             }
@@ -460,7 +1466,7 @@
 
         // Run the code
         async function runCode() {
-            const code = document.getElementById('code-editor').value.trim();
+            const code = editor.getValue().trim();
             const consoleOutput = document.getElementById('console-output');
             
             if (!code) {
@@ -514,14 +1520,18 @@
                     html += `<div class="test-result ${className}">`;
                     html += `<div class="test-result-header">${icon} ${test.description}</div>`;
                     
+                    if (test.input !== undefined && test.input !== "(no input)") {
+                        html += `<div class="test-details">Input: ${test.input}</div>`;
+                    }
+                    
                     if (passed) {
-                        html += `<div class="test-details">Expected: ${JSON.stringify(test.expected)}</div>`;
-                        html += `<div class="test-details">Got: ${JSON.stringify(test.actual)}</div>`;
+                        html += `<div class="test-details">Expected Output: ${test.expected}</div>`;
+                        html += `<div class="test-details">Your Output: ${test.actual}</div>`;
                     } else if (test.error) {
                         html += `<div class="test-details">Error: ${test.error}</div>`;
                     } else {
-                        html += `<div class="test-details">Expected: ${JSON.stringify(test.expected)}</div>`;
-                        html += `<div class="test-details">Got: ${JSON.stringify(test.actual)}</div>`;
+                        html += `<div class="test-details">Expected Output: ${test.expected}</div>`;
+                        html += `<div class="test-details">Your Output: ${test.actual}</div>`;
                     }
                     
                     html += '</div>';
@@ -536,7 +1546,7 @@
 
         // Clear the editor
         function clearEditor() {
-            document.getElementById('code-editor').value = '';
+            editor.setValue('# Write your Python code here...\n');
             document.getElementById('console-output').innerHTML = '<p style="color: #888;">Run your code to see the results...</p>';
         }
 
@@ -557,17 +1567,472 @@
             }
         }
 
-        // Keyboard shortcuts
+        // Keyboard shortcuts (Note: Ctrl/Cmd + Enter is handled by Monaco)
         document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + Enter to run code
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                e.preventDefault();
-                runCode();
-            }
+            // Additional keyboard shortcuts can be added here if needed
         });
 
         // Initialize on page load
         init();
+
+        // ========================================
+        // DRAGGABLE PANEL SYSTEM
+        // ========================================
+
+        let currentLayout = null;
+        let draggedPanel = null;
+        let dragGhost = null;
+        let dropIndicator = null;
+
+        // Initialize the panel system
+        function initPanelSystem() {
+            const savedLayout = localStorage.getItem('panelLayout');
+            if (savedLayout) {
+                currentLayout = JSON.parse(savedLayout);
+                renderLayout(currentLayout);
+            } else {
+                // Default layout: side by side (description | editor + console)
+                applyLayout('side-by-side');
+            }
+            
+            setupPanelDragging();
+        }
+
+        // Layout presets
+        function applyLayout(layoutName) {
+            let layout;
+            
+            switch(layoutName) {
+                case 'side-by-side':
+                    // Description on left, Editor and Console stacked on right
+                    layout = {
+                        type: 'row',
+                        children: [
+                            { type: 'panel', id: 'description', flex: 1 },
+                            { 
+                                type: 'column', 
+                                flex: 1,
+                                children: [
+                                    { type: 'panel', id: 'editor', flex: 2 },
+                                    { type: 'panel', id: 'console', flex: 1 }
+                                ]
+                            }
+                        ]
+                    };
+                    break;
+                    
+                case 'stacked':
+                    // All three stacked vertically
+                    layout = {
+                        type: 'column',
+                        children: [
+                            { type: 'panel', id: 'description', flex: 1 },
+                            { type: 'panel', id: 'editor', flex: 2 },
+                            { type: 'panel', id: 'console', flex: 1 }
+                        ]
+                    };
+                    break;
+                    
+                case 'three-column':
+                    // Three columns side by side
+                    layout = {
+                        type: 'row',
+                        children: [
+                            { type: 'panel', id: 'description', flex: 1 },
+                            { type: 'panel', id: 'editor', flex: 1 },
+                            { type: 'panel', id: 'console', flex: 1 }
+                        ]
+                    };
+                    break;
+                    
+                case 'focus-editor':
+                    // Editor takes center, description and console on sides
+                    layout = {
+                        type: 'row',
+                        children: [
+                            { type: 'panel', id: 'description', flex: 1 },
+                            { type: 'panel', id: 'editor', flex: 2 },
+                            { type: 'panel', id: 'console', flex: 1 }
+                        ]
+                    };
+                    break;
+            }
+            
+            currentLayout = layout;
+            localStorage.setItem('panelLayout', JSON.stringify(layout));
+            renderLayout(layout);
+        }
+
+        // Render the layout
+        function renderLayout(layout) {
+            const container = document.getElementById('main-container');
+            
+            // Save editor value if it exists
+            if (editor) {
+                savedEditorValue = editor.getValue();
+            }
+            
+            container.innerHTML = '';
+            
+            function buildLayout(config, parent, isRoot = false) {
+                if (config.type === 'panel') {
+                    // Clone the panel from template
+                    const template = document.getElementById(`${config.id}-template`);
+                    const panel = template.content.cloneNode(true).firstElementChild;
+                    panel.style.flex = config.flex || 1;
+                    if (config.size) {
+                        panel.style.flexBasis = config.size;
+                    }
+                    parent.appendChild(panel);
+                    
+                    // Handle editor panel
+                    if (config.id === 'editor') {
+                        setTimeout(() => {
+                            const editorDiv = document.getElementById('code-editor');
+                            if (editorDiv) {
+                                initializeMonacoEditor();
+                            }
+                        }, 100);
+                    }
+                    
+                    // Reload description panel with current challenge
+                    if (config.id === 'description') {
+                        setTimeout(() => {
+                            loadChallengeContent(currentChallengeId);
+                        }, 50);
+                    }
+                } else {
+                    const layoutDiv = document.createElement('div');
+                    layoutDiv.className = config.type === 'row' ? 'layout-row' : 'layout-column';
+                    layoutDiv.style.flex = config.flex || 1;
+                    if (config.size) {
+                        layoutDiv.style.flexBasis = config.size;
+                    }
+                    
+                    config.children.forEach((child, index) => {
+                        buildLayout(child, layoutDiv);
+                        
+                        // Add resize divider between children (but not after the last one)
+                        if (index < config.children.length - 1) {
+                            const divider = document.createElement('div');
+                            divider.className = config.type === 'row' ? 'resize-divider vertical' : 'resize-divider horizontal';
+                            divider.dataset.index = index;
+                            layoutDiv.appendChild(divider);
+                        }
+                    });
+                    parent.appendChild(layoutDiv);
+                }
+            }
+            
+            buildLayout(layout, container, true);
+            setupPanelDragging();
+            setupResizeDividers();
+        }
+
+        // Setup dragging for panels
+        function setupPanelDragging() {
+            const panels = document.querySelectorAll('.panel-header');
+            
+            panels.forEach(header => {
+                header.addEventListener('mousedown', startDrag);
+            });
+        }
+
+        function startDrag(e) {
+            if (e.button !== 0) return; // Only left click
+            
+            draggedPanel = e.currentTarget.closest('.panel');
+            const panelId = draggedPanel.dataset.panelId;
+            
+            // Create ghost element
+            dragGhost = document.createElement('div');
+            dragGhost.className = 'panel-ghost';
+            dragGhost.textContent = e.currentTarget.querySelector('.panel-title').textContent;
+            dragGhost.style.left = e.clientX + 10 + 'px';
+            dragGhost.style.top = e.clientY + 10 + 'px';
+            document.body.appendChild(dragGhost);
+            
+            // Create drop indicator
+            dropIndicator = document.createElement('div');
+            dropIndicator.className = 'drop-indicator';
+            dropIndicator.style.display = 'none';
+            document.body.appendChild(dropIndicator);
+            
+            draggedPanel.querySelector('.panel-header').classList.add('dragging');
+            
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', endDrag);
+            
+            e.preventDefault();
+        }
+
+        function onDrag(e) {
+            if (!dragGhost) return;
+            
+            dragGhost.style.left = e.clientX + 10 + 'px';
+            dragGhost.style.top = e.clientY + 10 + 'px';
+            
+            // Find drop target
+            const panels = Array.from(document.querySelectorAll('.panel')).filter(p => p !== draggedPanel);
+            let dropTarget = null;
+            let dropPosition = null;
+            
+            for (const panel of panels) {
+                const rect = panel.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                    dropTarget = panel;
+                    
+                    // Determine drop position based on mouse position
+                    const horizontalThird = rect.width / 3;
+                    const verticalThird = rect.height / 3;
+                    
+                    if (x < horizontalThird) {
+                        dropPosition = 'left';
+                        dropIndicator.style.left = rect.left + 'px';
+                        dropIndicator.style.top = rect.top + 'px';
+                        dropIndicator.style.width = '5px';
+                        dropIndicator.style.height = rect.height + 'px';
+                    } else if (x > rect.width - horizontalThird) {
+                        dropPosition = 'right';
+                        dropIndicator.style.left = (rect.right - 5) + 'px';
+                        dropIndicator.style.top = rect.top + 'px';
+                        dropIndicator.style.width = '5px';
+                        dropIndicator.style.height = rect.height + 'px';
+                    } else if (y < verticalThird) {
+                        dropPosition = 'top';
+                        dropIndicator.style.left = rect.left + 'px';
+                        dropIndicator.style.top = rect.top + 'px';
+                        dropIndicator.style.width = rect.width + 'px';
+                        dropIndicator.style.height = '5px';
+                    } else if (y > rect.height - verticalThird) {
+                        dropPosition = 'bottom';
+                        dropIndicator.style.left = rect.left + 'px';
+                        dropIndicator.style.top = (rect.bottom - 5) + 'px';
+                        dropIndicator.style.width = rect.width + 'px';
+                        dropIndicator.style.height = '5px';
+                    } else {
+                        dropPosition = 'swap';
+                        dropIndicator.style.left = rect.left + 'px';
+                        dropIndicator.style.top = rect.top + 'px';
+                        dropIndicator.style.width = rect.width + 'px';
+                        dropIndicator.style.height = rect.height + 'px';
+                    }
+                    
+                    dropIndicator.style.display = 'block';
+                    break;
+                }
+            }
+            
+            if (!dropTarget) {
+                dropIndicator.style.display = 'none';
+            }
+        }
+
+        function endDrag(e) {
+            if (!draggedPanel) return;
+            
+            // Find drop target and position
+            const panels = Array.from(document.querySelectorAll('.panel')).filter(p => p !== draggedPanel);
+            let dropTarget = null;
+            let dropPosition = null;
+            
+            for (const panel of panels) {
+                const rect = panel.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                    dropTarget = panel;
+                    
+                    const horizontalThird = rect.width / 3;
+                    const verticalThird = rect.height / 3;
+                    
+                    if (x < horizontalThird) dropPosition = 'left';
+                    else if (x > rect.width - horizontalThird) dropPosition = 'right';
+                    else if (y < verticalThird) dropPosition = 'top';
+                    else if (y > rect.height - verticalThird) dropPosition = 'bottom';
+                    else dropPosition = 'swap';
+                    
+                    break;
+                }
+            }
+            
+            if (dropTarget && dropPosition) {
+                rearrangePanels(draggedPanel.dataset.panelId, dropTarget.dataset.panelId, dropPosition);
+            }
+            
+            // Cleanup
+            draggedPanel.querySelector('.panel-header').classList.remove('dragging');
+            if (dragGhost) dragGhost.remove();
+            if (dropIndicator) dropIndicator.remove();
+            dragGhost = null;
+            dropIndicator = null;
+            draggedPanel = null;
+            
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', endDrag);
+        }
+
+        function rearrangePanels(sourcePanelId, targetPanelId, position) {
+            // Rebuild layout based on drag operation
+            const newLayout = generateNewLayout(sourcePanelId, targetPanelId, position);
+            currentLayout = newLayout;
+            localStorage.setItem('panelLayout', JSON.stringify(newLayout));
+            renderLayout(newLayout);
+        }
+
+        function generateNewLayout(sourceId, targetId, position) {
+            // Simple layout generation based on position
+            if (position === 'swap') {
+                // Just swap the two panels in the current layout
+                return currentLayout; // Simplified: keep current for swap
+            }
+            
+            // Create new split layout
+            if (position === 'left' || position === 'right') {
+                return {
+                    type: 'row',
+                    children: position === 'left' ? [
+                        { type: 'panel', id: sourceId, flex: 1 },
+                        { type: 'panel', id: targetId, flex: 1 },
+                        { type: 'panel', id: getThirdPanelId(sourceId, targetId), flex: 1 }
+                    ] : [
+                        { type: 'panel', id: targetId, flex: 1 },
+                        { type: 'panel', id: sourceId, flex: 1 },
+                        { type: 'panel', id: getThirdPanelId(sourceId, targetId), flex: 1 }
+                    ]
+                };
+            } else {
+                return {
+                    type: 'column',
+                    children: position === 'top' ? [
+                        { type: 'panel', id: sourceId, flex: 1 },
+                        { type: 'panel', id: targetId, flex: 1 },
+                        { type: 'panel', id: getThirdPanelId(sourceId, targetId), flex: 1 }
+                    ] : [
+                        { type: 'panel', id: targetId, flex: 1 },
+                        { type: 'panel', id: sourceId, flex: 1 },
+                        { type: 'panel', id: getThirdPanelId(sourceId, targetId), flex: 1 }
+                    ]
+                };
+            }
+        }
+
+        function getThirdPanelId(id1, id2) {
+            const all = ['description', 'editor', 'console'];
+            return all.find(id => id !== id1 && id !== id2);
+        }
+
+        // Setup resize dividers
+        function setupResizeDividers() {
+            const dividers = document.querySelectorAll('.resize-divider');
+            
+            dividers.forEach(divider => {
+                divider.addEventListener('mousedown', startResize);
+            });
+        }
+
+        let resizingDivider = null;
+        let resizeStartPos = 0;
+        let resizeElements = { prev: null, next: null };
+        let resizeStartSizes = { prev: 0, next: 0 };
+
+        function startResize(e) {
+            resizingDivider = e.currentTarget;
+            resizingDivider.classList.add('resizing');
+            
+            const isVertical = resizingDivider.classList.contains('vertical');
+            const parent = resizingDivider.parentElement;
+            const children = Array.from(parent.children);
+            const dividerIndex = children.indexOf(resizingDivider);
+            
+            // Find the actual panel/layout elements (skip other dividers)
+            let prevElement = null;
+            let nextElement = null;
+            
+            // Find previous non-divider element
+            for (let i = dividerIndex - 1; i >= 0; i--) {
+                if (!children[i].classList.contains('resize-divider')) {
+                    prevElement = children[i];
+                    break;
+                }
+            }
+            
+            // Find next non-divider element
+            for (let i = dividerIndex + 1; i < children.length; i++) {
+                if (!children[i].classList.contains('resize-divider')) {
+                    nextElement = children[i];
+                    break;
+                }
+            }
+            
+            if (!prevElement || !nextElement) return;
+            
+            resizeElements = { prev: prevElement, next: nextElement };
+            resizeStartPos = isVertical ? e.clientX : e.clientY;
+            resizeStartSizes = {
+                prev: isVertical ? prevElement.offsetWidth : prevElement.offsetHeight,
+                next: isVertical ? nextElement.offsetWidth : nextElement.offsetHeight
+            };
+            
+            document.body.style.cursor = isVertical ? 'col-resize' : 'row-resize';
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+            
+            e.preventDefault();
+        }
+
+        function doResize(e) {
+            if (!resizingDivider || !resizeElements.prev || !resizeElements.next) return;
+            
+            const isVertical = resizingDivider.classList.contains('vertical');
+            const currentPos = isVertical ? e.clientX : e.clientY;
+            const delta = currentPos - resizeStartPos;
+            
+            const newPrevSize = resizeStartSizes.prev + delta;
+            const newNextSize = resizeStartSizes.next - delta;
+            
+            // Minimum size of 100px
+            if (newPrevSize < 100 || newNextSize < 100) return;
+            
+            // Calculate total size
+            const totalSize = resizeStartSizes.prev + resizeStartSizes.next;
+            const prevFlex = newPrevSize / totalSize;
+            const nextFlex = newNextSize / totalSize;
+            
+            resizeElements.prev.style.flex = prevFlex;
+            resizeElements.next.style.flex = nextFlex;
+            
+            // Trigger editor layout update if resizing editor panel
+            if (editor && (resizeElements.prev.id === 'editor-panel' || resizeElements.next.id === 'editor-panel')) {
+                editor.layout();
+            }
+        }
+
+        function stopResize() {
+            if (resizingDivider) {
+                resizingDivider.classList.remove('resizing');
+                resizingDivider = null;
+            }
+            
+            document.body.style.cursor = '';
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+            
+            // Save layout (simplified - just save the current state)
+            // In a more complete implementation, you'd reconstruct the layout object with new flex values
+            if (currentLayout) {
+                localStorage.setItem('panelLayout', JSON.stringify(currentLayout));
+            }
+        }
+
+        // Initialize panel system after Monaco is ready
+        window.addEventListener('load', () => {
+            setTimeout(initPanelSystem, 500);
+        });
     </script>
 </body>
 </html>
