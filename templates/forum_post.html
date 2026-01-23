@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.title }} - Py1iner Forums</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/forum_post.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <a href="/" style="text-decoration: none; display: flex; align-items: center;">
+            <h1 style="color: #FFD343;"> Py</h1> <h1 style="color: #3672a5;"> 1iner</h1>
+        </a>
+        <div class="nav-links" style="display: flex; gap: 15px; align-items: center;">
+            <a href="/" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Home</a>
+            <a href="/challenges" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Challenges</a>
+            <a href="/wiki" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Wiki</a>
+            <a href="/forums" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Forums</a>
+            <a href="/creator" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Create</a>
+        </div>
+        <div class="user-menu">
+            <div class="user-menu-trigger" onclick="toggleUserMenu()">
+                <i class="fas fa-user-circle"></i>
+                {% if user %}
+                    <span>Welcome, <strong>{{ user.username }}</strong></span>
+                {% else %}
+                    <span>Welcome, <strong>Guest</strong></span>
+                {% endif %}
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <div class="user-dropdown" id="user-dropdown">
+                <div class="user-dropdown-header">
+                    {% if user %}
+                        <div style="color: #d4d4d4; font-weight: 500; margin-bottom: 4px;">{{ user.username }}</div>
+                    {% else %}
+                        <div style="color: #d4d4d4; font-weight: 500; margin-bottom: 4px;">Guest</div>
+                    {% endif %}
+                </div>
+                <div class="user-dropdown-menu">
+                    <button class="user-dropdown-item" onclick="window.location.href='/challenges'">
+                        <i class="fas fa-code"></i>
+                        <span>Challenges</span>
+                    </button>
+                    <button class="user-dropdown-item" onclick="window.location.href='/wiki'">
+                        <i class="fas fa-book"></i>
+                        <span>Wiki</span>
+                    </button>
+                    <button class="user-dropdown-item" onclick="openSettings(); toggleUserMenu();">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
+                    {% if user %}
+                        <button class="user-dropdown-item logout" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    {% else %}
+                        <button class="user-dropdown-item" onclick="window.location.href='/login'">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <a href="/forums" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Forums
+        </a>
+
+        <!-- Main Post -->
+        <div class="post-card">
+            <div class="post-container">
+                <div class="vote-section">
+                    <button class="vote-btn" onclick="vote('up')">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <span class="vote-count" id="vote-count">0</span>
+                    <button class="vote-btn" onclick="vote('down')">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                </div>
+                <div class="post-main">
+                    <div class="post-header">
+                        <h1 class="post-title">{{ post.title }}</h1>
+                        <div class="post-meta">
+                            <span>Posted by <span class="post-author">{{ post.username }}</span></span>
+                            <span>•</span>
+                            <span><i class="fas fa-clock"></i> {{ post.created_at }}</span>
+                        </div>
+                    </div>
+                    <div class="post-content" id="post-content">
+                        <!-- Content will be rendered by marked.js -->
+                    </div>
+                    <div class="post-actions">
+                        <button class="action-btn" onclick="focusReplyForm()">
+                            <i class="fas fa-comment"></i>
+                            <span>{{ post.replies|length }} Comments</span>
+                        </button>
+                        <button class="action-btn" onclick="sharePost()">
+                            <i class="fas fa-share"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Replies Section -->
+        <div class="replies-section">
+            {% if user %}
+            <div class="reply-form">
+                <h3>Add a Comment</h3>
+                <form onsubmit="submitReply(event)" id="reply-form">
+                    <div class="form-group">
+                        <textarea id="reply-content" placeholder="What are your thoughts?" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Comment</button>
+                </form>
+            </div>
+            {% else %}
+            <div class="auth-message">
+                <i class="fas fa-info-circle"></i> Please <a href="/login">login</a> to comment on this post.
+            </div>
+            {% endif %}
+
+            {% if post.replies %}
+            <h3 class="replies-header">{{ post.replies|length }} Comments</h3>
+            {% for reply in post.replies %}
+            <div class="reply-card">
+                <div class="vote-section">
+                    <button class="vote-btn">
+                        <i class="fas fa-arrow-up"></i>
+                    </button>
+                    <span class="vote-count">0</span>
+                    <button class="vote-btn">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                </div>
+                <div class="reply-main">
+                    <div class="reply-header">
+                        <span class="reply-author">{{ reply.username }}</span>
+                        <span class="reply-date">{{ reply.created_at }}</span>
+                    </div>
+                    <div class="reply-content reply-content-{{ loop.index }}">
+                        <!-- Content will be rendered by marked.js -->
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Data for JavaScript -->
+    <script type="application/json" id="post-data">
+        {
+            "id": {{ post.id }},
+            "content": {{ post.content|tojson }},
+            "replies": [
+                {% for reply in post.replies %}
+                {
+                    "index": {{ loop.index }},
+                    "content": {{ reply.content|tojson }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }
+    </script>
+
+    <script>
+        // Render markdown content
+        document.addEventListener('DOMContentLoaded', function() {
+            const postData = JSON.parse(document.getElementById('post-data').textContent);
+            
+            // Render main post content
+            const postElement = document.getElementById('post-content');
+            if (postElement && postData.content) {
+                postElement.innerHTML = marked.parse(postData.content);
+            }
+
+            // Render reply content
+            postData.replies.forEach(function(reply) {
+                const replyElement = document.querySelector('.reply-content-' + reply.index);
+                if (replyElement && reply.content) {
+                    replyElement.innerHTML = marked.parse(reply.content);
+                }
+            });
+        });
+
+        function vote(direction) {
+            // Voting functionality - to be implemented
+            console.log('Vote:', direction);
+        }
+
+        function focusReplyForm() {
+            const textarea = document.getElementById('reply-content');
+            if (textarea) {
+                textarea.focus();
+                textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function sharePost() {
+            const url = window.location.href;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('Link copied to clipboard!');
+                });
+            } else {
+                prompt('Copy this link:', url);
+            }
+        }
+
+        async function submitReply(event) {
+            event.preventDefault();
+            
+            const postData = JSON.parse(document.getElementById('post-data').textContent);
+            const content = document.getElementById('reply-content').value;
+            const postId = postData.id;
+            
+            try {
+                const response = await fetch(`/api/forums/post/${postId}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to post comment');
+                }
+            } catch (error) {
+                alert('Error posting comment: ' + error.message);
+            }
+        }
+
+        // User menu dropdown
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('user-dropdown');
+            const trigger = document.querySelector('.user-menu-trigger');
+            dropdown.classList.toggle('show');
+            trigger.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu && !userMenu.contains(event.target)) {
+                const dropdown = document.getElementById('user-dropdown');
+                const trigger = document.querySelector('.user-menu-trigger');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                    trigger.classList.remove('active');
+                }
+            }
+        });
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Logout failed. Please try again.');
+            }
+        }
+
+        function openSettings() {
+            console.log('Settings clicked');
+        }
+    </script>
+</body>
+</html>

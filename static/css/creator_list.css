@@ -15,6 +15,7 @@ body {
 
 /* Header */
 .header {
+    height: 70px;
     background: #2d2d30;
     padding: 15px 30px;
     border-bottom: 2px solid #3672a5;

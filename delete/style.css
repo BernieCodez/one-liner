@@ -1,0 +1,82 @@
+:root {
+    --py-blue: #306998;
+    --py-yellow: #FFD43B;
+}
+
+body { 
+    margin: 0; background: #050a14; color: white; 
+    font-family: 'Courier New', monospace; overflow: hidden; 
+}
+
+/* Stars Background */
+.stars-container {
+    position: fixed; width: 100%; height: 100%; z-index: -1;
+    background: radial-gradient(circle, #1b2735 0%, #090a0f 100%);
+}
+.stars {
+    width: 100%; height: 100%;
+    background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat;
+    animation: moveStars 200s linear infinite;
+}
+@keyframes moveStars { from {background-position:0 0;} to {background-position:1000px 1000px;} }
+
+/* 3D Universe Setup */
+.main-universe {
+    display: flex; flex-direction: column; align-items: center; 
+    justify-content: center; height: 100vh; perspective: 1000px;
+}
+
+.stage {
+    position: relative; width: 100%; height: 400px;
+    display: flex; align-items: center; justify-content: center;
+    transform-style: preserve-3d;
+}
+
+.central-logo {
+    font-size: 6rem; position: absolute; z-index: 5;
+    text-shadow: 0 0 30px rgba(48, 105, 152, 0.8);
+    pointer-events: none; /* Allows clicking through to cards */
+}
+.central-logo span { color: var(--py-yellow); }
+
+/* The Orbiting Ring */
+.ring {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease-out;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.card {
+    position: absolute; width: 140px; height: 180px;
+    background: rgba(48, 105, 152, 0.4);
+    border: 2px solid var(--py-blue);
+    border-radius: 12px; backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; text-align: center; font-size: 1.2rem;
+    cursor: pointer; user-select: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    /* Each card starts flat but pushed out in Z space */
+    backface-visibility: visible;
+}
+
+.card:hover { border-color: var(--py-yellow); box-shadow: 0 0 20px var(--py-yellow); }
+
+/* Terminal Styles */
+.terminal-window {
+    margin-top: 50px; background: #1e1e1e; width: 450px; border-radius: 6px;
+    border: 1px solid var(--py-blue); z-index: 100;
+}
+.terminal-header { background: #333; padding: 8px; display: flex; border-radius: 6px 6px 0 0; }
+.dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+.red { background: #ff5f56; } .yellow { background: #ffbd2e; } .green { background: #27c93f; }
+.terminal-body { padding: 15px; }
+.comment { color: #6a9955; margin-bottom: 10px; font-size: 0.8rem; }
+.code-line { display: flex; align-items: center; margin-bottom: 10px; }
+.prompt { color: var(--py-yellow); margin-right: 10px; }
+#pass-input { background: transparent; border: none; color: #4af626; font-size: 1.2rem; outline: none; width: 100px; }
+#go-btn { background: var(--py-yellow); border: none; padding: 5px 15px; font-weight: bold; cursor: pointer; }
+.output { font-size: 0.8rem; color: #aaa; }
+
+/* Warp Speed Effect */
+.warp-drive { transform: scale(30) rotate(10deg); opacity: 0; transition: 1.5s ease-in; }

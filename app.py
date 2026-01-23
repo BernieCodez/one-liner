@@ -10,11 +10,24 @@ import secrets
 from database import (
     create_user, verify_user, 
     create_forum_post, get_forum_posts, get_forum_post, create_forum_reply,
-    create_wiki_page, update_wiki_page, get_wiki_page, get_all_wiki_pages, delete_wiki_page
+    create_wiki_page, update_wiki_page, get_wiki_page, get_all_wiki_pages, delete_wiki_page,
+    init_db, save_user_solution, get_user_progress, get_user_solution
 )
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
+
+# Use persistent secret key
+SECRET_KEY_FILE = 'secret.key'
+if os.path.exists(SECRET_KEY_FILE):
+    with open(SECRET_KEY_FILE, 'r') as f:
+        app.secret_key = f.read()
+else:
+    app.secret_key = secrets.token_hex(32)
+    with open(SECRET_KEY_FILE, 'w') as f:
+        f.write(app.secret_key)
+
+# Initialize database
+init_db()
 
 # Directory for storing user code
 SAVED_CODE_DIR = 'saved_code'
@@ -599,6 +612,20 @@ def get_current_user():
         return jsonify({"user": user})
     return jsonify({"user": None})
 
+@app.route('/api/user/progress')
+def get_user_progress_api():
+    """Get user's progress on all challenges"""
+    user = session.get('user')
+    if not user:
+        return jsonify({"error": "Not authenticated"}), 401
+    
+    user_id = user.get('id')
+    if not user_id:
+        return jsonify({"error": "Invalid user session"}), 400
+    
+    progress = get_user_progress(user_id)
+    return jsonify({"progress": progress})
+
 # Wiki routes
 @app.route('/wiki')
 def wiki():
@@ -659,6 +686,21 @@ def api_delete_wiki_page(slug):
 @app.route('/forums')
 def forums():
     return render_template('forums.html', user=session.get('user'))
+
+@app.route('/forums/post/<int:post_id>')
+def forum_post_page(post_id):
+    """Render individual forum post page"""
+    post = get_forum_post(post_id)
+    if not post:
+        return "Post not found", 404
+    
+    # Format dates for display
+    from datetime import datetime
+    post['created_at'] = datetime.strptime(post['created_at'], '%Y-%m-%d %H:%M:%S').strftime('%B %d, %Y at %I:%M %p')
+    for reply in post.get('replies', []):
+        reply['created_at'] = datetime.strptime(reply['created_at'], '%Y-%m-%d %H:%M:%S').strftime('%B %d, %Y at %I:%M %p')
+    
+    return render_template('forum_post.html', post=post, user=session.get('user'))
 
 @app.route('/api/forums/posts')
 def api_get_forum_posts():
@@ -880,6 +922,16 @@ def execute_code():
                 "passed": False
             })
     
+    # Save progress to database if all tests passed and user is logged in
+    if all_passed and challenge_id and not custom_test_cases:
+        user = session.get('user')
+        if user:
+            user_id = user.get('id')
+            if user_id:
+                # Check if this is a custom challenge
+                is_custom = challenge_id not in [c['id'] for c in CHALLENGES]
+                save_user_solution(user_id, challenge_id, code, is_custom)
+    
     return jsonify({
         "passed": all_passed,
         "results": results,
@@ -889,6 +941,7 @@ def execute_code():
 @app.route('/api/execute-general', methods=['POST'])
 def execute_general():
     """Execute user's code in general mode (free play) with custom input"""
+    import time
     data = request.get_json()
     code = data.get('code', '').strip()
     user_input = data.get('input', '')
@@ -915,8 +968,10 @@ def execute_general():
         except (AttributeError, ValueError):
             pass  # Windows doesn't support SIGALRM
         
-        # Execute the code
+        # Execute the code and track time
+        start_time = time.time()
         exec(code, namespace)
+        execution_time = time.time() - start_time
         
         # Cancel timeout
         try:
@@ -933,7 +988,8 @@ def execute_general():
         
         return jsonify({
             "success": True,
-            "output": output
+            "output": output,
+            "execution_time": execution_time
         })
         
     except TimeoutError:
@@ -960,6 +1016,7 @@ def save_code():
     data = request.get_json()
     challenge_id = data.get('challenge_id')
     code = data.get('code', '')
+    is_custom = data.get('is_custom', False)
     
     if not challenge_id:
         return jsonify({"error": "No challenge ID provided"}), 400
@@ -969,6 +1026,14 @@ def save_code():
         filepath = os.path.join(SAVED_CODE_DIR, f'challenge_{challenge_id}.py')
         with open(filepath, 'w') as f:
             f.write(code)
+        
+        # Also save to database if user is logged in
+        user = session.get('user')
+        if user and code.strip():  # Only save non-empty code
+            user_id = user.get('id')
+            if user_id:
+                save_user_solution(user_id, challenge_id, code, is_custom)
+        
         return jsonify({"success": True, "message": "Code saved successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -977,6 +1042,20 @@ def save_code():
 def load_code(challenge_id):
     """Load saved code for a specific challenge"""
     try:
+        # First check database if user is logged in
+        user = session.get('user')
+        if user:
+            user_id = user.get('id')
+            if user_id:
+                # Check if it's a custom challenge
+                custom = load_custom_challenges()
+                is_custom = challenge_id not in [c['id'] for c in CHALLENGES]
+                
+                db_solution = get_user_solution(user_id, challenge_id, is_custom)
+                if db_solution:
+                    return jsonify({"code": db_solution})
+        
+        # Fallback to file-based storage
         filepath = os.path.join(SAVED_CODE_DIR, f'challenge_{challenge_id}.py')
         if os.path.exists(filepath):
             with open(filepath, 'r') as f:

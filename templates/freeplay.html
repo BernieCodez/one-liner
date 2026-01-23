@@ -214,7 +214,9 @@
                     <div class="editor-toolbar" style="padding: 10px 15px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
                         <span class="editor-info">Monaco Editor • Python 3</span>
                     </div>
-                    <div id="code-editor" style="flex: 1;"></div>
+                    <div style="padding: 20px; display: flex; flex-direction: column; flex: 1;">
+                        <div id="code-editor" style="flex: 1; min-height: 200px;"></div>
+                    </div>
                 </div>
                 
                 <!-- Input File View -->
@@ -225,8 +227,10 @@
                             Input data for your Python script (accessible via <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 3px;">input()</code>)
                         </span>
                     </div>
-                    <div class="input-editor-wrapper">
-                        <textarea id="input-editor" class="input-editor" placeholder="Enter input data here, one line per input() call..."></textarea>
+                    <div style="padding: 20px; display: flex; flex-direction: column; flex: 1;">
+                        <div class="input-editor-wrapper" style="flex: 1;">
+                            <textarea id="input-editor" class="input-editor" placeholder="Enter input data here, one line per input() call..."></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -701,10 +705,9 @@
                 
                 if (data.success) {
                     const output = data.output || '(no output)';
-                    statusDiv.innerHTML = '<span class="status-indicator success"><i class="fas fa-check-circle"></i> Success</span>';
-                    outputDiv.innerHTML = `<div style="color: #4caf50; margin-bottom: 10px; padding: 8px; background: rgba(76, 175, 80, 0.1); border-left: 3px solid #4caf50; border-radius: 3px;">
-                        <i class="fas fa-check-circle"></i> <strong>Execution completed successfully</strong>
-                    </div><pre style="margin: 0; white-space: pre-wrap; color: var(--text-primary);">${escapeHtml(output)}</pre>`;
+                    const runtime = data.execution_time ? `${(data.execution_time * 1000).toFixed(2)}ms` : 'N/A';
+                    statusDiv.innerHTML = `<span class="status-indicator success"><i class="fas fa-check-circle"></i> Success</span><span style="margin-left: 15px; color: var(--text-secondary); font-size: 13px;"><i class="fas fa-clock"></i> Runtime: ${runtime}</span>`;
+                    outputDiv.innerHTML = `<pre style="margin: 0; white-space: pre-wrap; color: var(--text-primary);">${escapeHtml(output)}</pre>`;
                 } else {
                     statusDiv.innerHTML = '<span class="status-indicator error"><i class="fas fa-times-circle"></i> Error</span>';
                     let errorHtml = `<div style="color: #f44336; margin-bottom: 10px; padding: 8px; background: rgba(244, 67, 54, 0.1); border-left: 3px solid #f44336; border-radius: 3px;">

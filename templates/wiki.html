@@ -15,7 +15,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1e1e1e;
             color: #d4d4d4;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .navbar {
@@ -25,6 +28,11 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #3e3e3e;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
         }
 
         .navbar-brand {
@@ -53,17 +61,17 @@
 
         .wiki-container {
             display: flex;
-            max-width: 1400px;
-            margin: 0 auto;
-            min-height: calc(100vh - 60px);
+            flex: 1;
+            overflow: hidden;
         }
 
         .sidebar {
-            width: 300px;
+            width: 250px;
             background: #252526;
             padding: 20px;
             border-right: 1px solid #3e3e3e;
             overflow-y: auto;
+            flex-shrink: 0;
         }
 
         .sidebar-header {
@@ -119,8 +127,9 @@
 
         .content-area {
             flex: 1;
-            padding: 40px;
+            padding: 40px 60px;
             overflow-y: auto;
+            width: 100%;
         }
 
         .page-header {
@@ -382,6 +391,10 @@
                     <button class="user-dropdown-item" onclick="window.location.href='/forums'">
                         <i class="fas fa-comments"></i>
                         <span>Forums</span>
+                    </button>
+                    <button class="user-dropdown-item" onclick="openSettings(); toggleUserMenu();">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
                     </button>
                     {% if user %}
                         <button class="user-dropdown-item logout" onclick="handleLogout()">

@@ -7,66 +7,53 @@
     <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/static/css/main.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="/static/css/forum_modal.css">
     <style>
         body {
             margin: 0;
             padding: 0;
+            padding-top: 60px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1e1e1e;
             color: #d4d4d4;
             min-height: 100vh;
         }
 
-        .navbar {
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
             background: #252526;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             border-bottom: 1px solid #3e3e3e;
         }
 
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-            color: #FFD343;
-        }
-
-        .navbar-links {
-            display: flex;
-            gap: 20px;
-        }
-
-        .navbar-links a {
-            color: #d4d4d4;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            transition: color 0.3s;
-        }
-
-        .navbar-links a:hover {
-            color: #FFD343;
-            background: rgba(255, 211, 67, 0.1);
-        }
-
         .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #posts-container {
+            display: flex;
+            flex-direction: column;
         }
 
         .forums-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .forums-header h1 {
             color: #FFD343;
             margin: 0;
+            font-size: 28px;
         }
 
         .new-post-btn {
@@ -74,9 +61,10 @@
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 20px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 600;
             transition: background 0.3s;
             display: flex;
             align-items: center;
@@ -92,52 +80,170 @@
             cursor: not-allowed;
         }
 
-        .post-list {
+        /* Search and Filter Section */
+        .search-filter-section {
             background: #252526;
             border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .post-item {
-            padding: 20px;
-            border-bottom: 1px solid #3e3e3e;
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #2d2d2d;
+            border: 1px solid #3e3e3e;
+            border-radius: 5px;
+            color: #d4d4d4;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3672a5;
+        }
+
+        .search-btn {
+            background: #3672a5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
             transition: background 0.3s;
         }
 
-        .post-item:last-child {
-            border-bottom: none;
+        .search-btn:hover {
+            background: #4a8ec5;
         }
 
-        .post-item:hover {
-            background: rgba(255, 211, 67, 0.05);
-        }
-
-        .post-header {
+        .filter-options {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #2d2d2d;
+            color: #d4d4d4;
+            border: 1px solid #3e3e3e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: #3672a5;
+            color: #3672a5;
+        }
+
+        .filter-btn.active {
+            background: #3672a5;
+            color: white;
+            border-color: #3672a5;
+        }
+
+        .sort-dropdown {
+            background: #2d2d2d;
+            color: #d4d4d4;
+            border: 1px solid #3e3e3e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* Post Cards */
+        .post-card {
+            background: #252526;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .post-card:hover {
+            background: #2d2d2d;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .vote-section {
+            background: #2d2d2d;
+            padding: 12px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-width: 60px;
+        }
+
+        .vote-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+
+        .vote-btn:hover {
+            color: #FFD343;
+        }
+
+        .vote-count {
+            font-weight: bold;
+            color: #d4d4d4;
+            font-size: 14px;
+        }
+
+        .post-content {
+            flex: 1;
+            padding: 16px 20px;
         }
 
         .post-title {
-            font-size: 20px;
-            color: #FFD343;
+            color: #d4d4d4;
+            font-size: 16px;
+            font-weight: 600;
             margin: 0 0 8px 0;
+            line-height: 1.4;
         }
 
         .post-meta {
-            font-size: 14px;
+            font-size: 12px;
             color: #888;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
         }
 
-        .post-meta i {
-            margin-right: 5px;
+        .post-author {
+            color: #3672a5;
+            font-weight: 600;
         }
 
         .post-stats {
             display: flex;
             gap: 15px;
-            font-size: 14px;
+            font-size: 12px;
             color: #888;
         }
 
@@ -147,233 +253,19 @@
             gap: 5px;
         }
 
-        .post-view {
-            background: #252526;
-            border-radius: 8px;
-            padding: 30px;
-        }
-
-        .post-view-header {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #3e3e3e;
-        }
-
-        .post-view-title {
-            font-size: 32px;
-            color: #FFD343;
-            margin: 0 0 15px 0;
-        }
-
-        .post-content {
-            line-height: 1.8;
-            color: #d4d4d4;
-            margin-bottom: 30px;
-        }
-
-        .post-content p {
-            margin-bottom: 15px;
-        }
-
-        .post-content code {
-            background: #2d2d2d;
-            padding: 2px 6px;
-            border-radius: 3px;
-            color: #FFD343;
-            font-family: 'Courier New', monospace;
-        }
-
-        .post-content pre {
-            background: #2d2d2d;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-            border-left: 3px solid #3672a5;
-            margin: 15px 0;
-        }
-
-        .post-content pre code {
-            background: none;
-            padding: 0;
-        }
-
-        .replies-section {
-            margin-top: 40px;
-        }
-
-        .replies-header {
-            font-size: 20px;
-            color: #FFD343;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #3e3e3e;
-        }
-
-        .reply-item {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            border-left: 3px solid #3672a5;
-        }
-
-        .reply-header {
+        .post-item {
+        .post-stats span {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: #888;
-        }
-
-        .reply-author {
-            color: #3672a5;
-            font-weight: bold;
-        }
-
-        .reply-content {
-            color: #d4d4d4;
-            line-height: 1.6;
-        }
-
-        .reply-form {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 1px solid #3e3e3e;
-        }
-
-        .reply-form h3 {
-            color: #FFD343;
-            margin-bottom: 15px;
-        }
-
-        .back-btn {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .back-btn:hover {
-            background: #5a6268;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            justify-content: center;
             align-items: center;
-            z-index: 1000;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: #252526;
-            padding: 30px;
-            border-radius: 10px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-header h2 {
-            color: #FFD343;
-            margin: 0;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: #d4d4d4;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #d4d4d4;
-            font-weight: bold;
-        }
-
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            background: #2d2d2d;
-            border: 1px solid #3e3e3e;
-            border-radius: 5px;
-            color: #d4d4d4;
-            font-size: 14px;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            box-sizing: border-box;
-        }
-
-        .form-group textarea {
-            min-height: 200px;
-            resize: vertical;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-
-        .btn-primary {
-            background: #3672a5;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #4a8ec5;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
+            gap: 5px;
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: #888;
+            background: #252526;
+            border-radius: 8px;
         }
 
         .empty-state i {
@@ -382,13 +274,10 @@
             opacity: 0.5;
         }
 
-        .auth-message {
-            background: rgba(255, 211, 67, 0.1);
-            border: 1px solid #FFD343;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: #FFD343;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
         }
     </style>
 </head>
@@ -431,6 +320,10 @@
                         <i class="fas fa-book"></i>
                         <span>Wiki</span>
                     </button>
+                    <button class="user-dropdown-item" onclick="openSettings(); toggleUserMenu();">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
                     {% if user %}
                         <button class="user-dropdown-item logout" onclick="handleLogout()">
                             <i class="fas fa-sign-out-alt"></i>
@@ -449,14 +342,43 @@
 
     <div class="container">
         <div class="forums-header">
-            <h1>Community Forums</h1>
+            <h1><i class="fas fa-comments"></i> Community Forums</h1>
             <button class="new-post-btn" id="new-post-btn" onclick="showNewPostModal()">
-                <i class="fas fa-plus"></i> New Discussion
+                <i class="fas fa-plus"></i> Create Post
             </button>
         </div>
 
-        <div id="forum-view">
-            <!-- Forum posts will be loaded here -->
+        <!-- Search and Filter Section -->
+        <div class="search-filter-section">
+            <div class="search-box">
+                <input type="text" 
+                       id="search-input" 
+                       class="search-input" 
+                       placeholder="Search discussions..."
+                       onkeypress="if(event.key === 'Enter') searchPosts()">
+                <button class="search-btn" onclick="searchPosts()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            <div class="filter-options">
+                <span style="color: #888; font-size: 13px; display: flex; align-items: center;">Sort by:</span>
+                <button class="filter-btn active" data-sort="recent" onclick="setSortFilter('recent')">
+                    <i class="fas fa-clock"></i> Recent
+                </button>
+                <button class="filter-btn" data-sort="popular" onclick="setSortFilter('popular')">
+                    <i class="fas fa-fire"></i> Popular
+                </button>
+                <button class="filter-btn" data-sort="unanswered" onclick="setSortFilter('unanswered')">
+                    <i class="fas fa-question-circle"></i> Unanswered
+                </button>
+            </div>
+        </div>
+
+        <!-- Posts List -->
+        <div id="posts-container">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Loading discussions...
+            </div>
         </div>
     </div>
 
@@ -464,7 +386,7 @@
     <div class="modal" id="post-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>New Discussion</h2>
+                <h2>Create a New Discussion</h2>
                 <button class="close-btn" onclick="closePostModal()">&times;</button>
             </div>
             <form id="post-form" onsubmit="createPost(event)">
@@ -474,7 +396,16 @@
                 </div>
                 <div class="form-group">
                     <label for="post-content">Content (Markdown supported):</label>
-                    <textarea id="post-content" required placeholder="Describe your question or start the discussion..."></textarea>
+                    <textarea id="post-content" required placeholder="Describe your question or start the discussion...
+
+You can use Markdown formatting:
+**bold text**
+*italic text*
+`code`
+```python
+# code block
+```
+"></textarea>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closePostModal()">Cancel</button>
@@ -486,7 +417,9 @@
 
     <script>
         let currentUser = null;
-        let currentPost = null;
+        let allPosts = [];
+        let currentSort = 'recent';
+        let searchQuery = '';
 
         // Check if user is logged in
         async function checkAuth() {
@@ -509,142 +442,119 @@
         async function loadPosts() {
             try {
                 const response = await fetch('/api/forums/posts');
-                const posts = await response.json();
-                
-                const forumView = document.getElementById('forum-view');
-                
-                if (posts.length === 0) {
-                    forumView.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-comments"></i>
-                            <h2>No Discussions Yet</h2>
-                            <p>Be the first to start a discussion!</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                forumView.innerHTML = '<div class="post-list"></div>';
-                const postList = forumView.querySelector('.post-list');
-                
-                posts.forEach(post => {
-                    const postItem = document.createElement('div');
-                    postItem.className = 'post-item';
-                    postItem.onclick = () => loadPost(post.id);
-                    
-                    const date = new Date(post.updated_at).toLocaleDateString();
-                    
-                    postItem.innerHTML = `
-                        <div class="post-header">
-                            <div>
-                                <h3 class="post-title">${escapeHtml(post.title)}</h3>
-                                <div class="post-meta">
-                                    <i class="fas fa-user"></i> ${escapeHtml(post.username)}
-                                    <span style="margin: 0 10px;">•</span>
-                                    <i class="fas fa-clock"></i> ${date}
-                                </div>
-                            </div>
-                            <div class="post-stats">
-                                <span><i class="fas fa-comments"></i> ${post.reply_count} replies</span>
-                            </div>
-                        </div>
-                    `;
-                    
-                    postList.appendChild(postItem);
-                });
+                allPosts = await response.json();
+                renderPosts();
             } catch (error) {
                 console.error('Error loading posts:', error);
+                document.getElementById('posts-container').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h2>Error Loading Posts</h2>
+                        <p>Please try refreshing the page.</p>
+                    </div>
+                `;
             }
         }
 
-        // Load a specific post with replies
-        async function loadPost(postId) {
-            try {
-                const response = await fetch(`/api/forums/post/${postId}`);
-                const post = await response.json();
-                
-                if (!response.ok) {
-                    alert('Post not found');
-                    return;
-                }
-                
-                currentPost = post;
-                const forumView = document.getElementById('forum-view');
-                
-                const date = new Date(post.created_at).toLocaleDateString();
-                const htmlContent = marked.parse(post.content);
-                
-                let repliesHtml = '';
-                if (post.replies && post.replies.length > 0) {
-                    repliesHtml = `
-                        <div class="replies-section">
-                            <h3 class="replies-header">${post.replies.length} Replies</h3>
-                            ${post.replies.map(reply => {
-                                const replyDate = new Date(reply.created_at).toLocaleDateString();
-                                const replyHtml = marked.parse(reply.content);
-                                return `
-                                    <div class="reply-item">
-                                        <div class="reply-header">
-                                            <span class="reply-author">${escapeHtml(reply.username)}</span>
-                                            <span>${replyDate}</span>
-                                        </div>
-                                        <div class="reply-content">${replyHtml}</div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-                }
-                
-                let replyFormHtml = '';
-                if (currentUser) {
-                    replyFormHtml = `
-                        <div class="reply-form">
-                            <h3>Add a Reply</h3>
-                            <form onsubmit="submitReply(event)">
-                                <div class="form-group">
-                                    <textarea id="reply-content" required placeholder="Write your reply..."></textarea>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="submit" class="btn btn-primary">Post Reply</button>
-                                </div>
-                            </form>
-                        </div>
-                    `;
-                } else {
-                    replyFormHtml = `
-                        <div class="auth-message">
-                            <i class="fas fa-info-circle"></i> Please <a href="/login" style="color: #FFD343;">login</a> to reply to this discussion.
-                        </div>
-                    `;
-                }
-                
-                forumView.innerHTML = `
-                    <button class="back-btn" onclick="loadPosts()">
-                        <i class="fas fa-arrow-left"></i> Back to Forums
-                    </button>
-                    <div class="post-view">
-                        <div class="post-view-header">
-                            <h2 class="post-view-title">${escapeHtml(post.title)}</h2>
-                            <div class="post-meta">
-                                <i class="fas fa-user"></i> ${escapeHtml(post.username)}
-                                <span style="margin: 0 10px;">•</span>
-                                <i class="fas fa-clock"></i> ${date}
-                            </div>
-                        </div>
-                        <div class="post-content">${htmlContent}</div>
-                        ${repliesHtml}
-                        ${replyFormHtml}
+        function renderPosts() {
+            let posts = [...allPosts];
+            
+            // Apply search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                posts = posts.filter(post => 
+                    post.title.toLowerCase().includes(query) || 
+                    post.content.toLowerCase().includes(query) ||
+                    post.username.toLowerCase().includes(query)
+                );
+            }
+            
+            // Apply sort
+            if (currentSort === 'recent') {
+                posts.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            } else if (currentSort === 'popular') {
+                posts.sort((a, b) => b.reply_count - a.reply_count);
+            } else if (currentSort === 'unanswered') {
+                posts = posts.filter(post => post.reply_count === 0);
+                posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+            
+            const container = document.getElementById('posts-container');
+            
+            if (posts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <h2>${searchQuery ? 'No posts found' : 'No Discussions Yet'}</h2>
+                        <p>${searchQuery ? 'Try a different search term.' : 'Be the first to start a discussion!'}</p>
                     </div>
                 `;
-            } catch (error) {
-                console.error('Error loading post:', error);
+                return;
             }
+            
+            container.innerHTML = posts.map(post => {
+                const date = formatDate(post.updated_at);
+                const timeAgo = getTimeAgo(post.updated_at);
+                
+                return `
+                    <div class="post-card" onclick="viewPost(${post.id})">
+                        <div class="vote-section">
+                            <button class="vote-btn" onclick="event.stopPropagation(); vote(${post.id}, 'up')">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="vote-count">0</span>
+                            <button class="vote-btn" onclick="event.stopPropagation(); vote(${post.id}, 'down')">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        <div class="post-content">
+                            <h3 class="post-title">${escapeHtml(post.title)}</h3>
+                            <div class="post-meta">
+                                <span>Posted by <span class="post-author">${escapeHtml(post.username)}</span></span>
+                                <span>•</span>
+                                <span title="${date}">${timeAgo}</span>
+                            </div>
+                            <div class="post-stats">
+                                <span><i class="fas fa-comment"></i> ${post.reply_count} ${post.reply_count === 1 ? 'comment' : 'comments'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function viewPost(postId) {
+            window.location.href = `/forums/post/${postId}`;
+        }
+
+        function searchPosts() {
+            searchQuery = document.getElementById('search-input').value;
+            renderPosts();
+        }
+
+        function setSortFilter(sort) {
+            currentSort = sort;
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.sort === sort) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            renderPosts();
+        }
+
+        function vote(postId, direction) {
+            // Voting functionality - to be implemented
+            console.log('Vote:', postId, direction);
         }
 
         function showNewPostModal() {
             if (!currentUser) {
                 alert('Please login to create a post');
+                window.location.href = '/login';
                 return;
             }
             document.getElementById('post-modal').classList.add('show');
@@ -671,8 +581,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     closePostModal();
-                    await loadPosts();
-                    loadPost(data.post_id);
+                    window.location.href = `/forums/post/${data.post_id}`;
                 } else {
                     const data = await response.json();
                     alert(data.error || 'Failed to create post');
@@ -682,27 +591,23 @@
             }
         }
 
-        async function submitReply(event) {
-            event.preventDefault();
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        function getTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
             
-            const content = document.getElementById('reply-content').value;
-            
-            try {
-                const response = await fetch(`/api/forums/post/${currentPost.id}/reply`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ content })
-                });
-                
-                if (response.ok) {
-                    loadPost(currentPost.id);
-                } else {
-                    const data = await response.json();
-                    alert(data.error || 'Failed to post reply');
-                }
-            } catch (error) {
-                alert('Error posting reply: ' + error.message);
-            }
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+            if (seconds < 2592000) return `${Math.floor(seconds / 604800)}w ago`;
+            if (seconds < 31536000) return `${Math.floor(seconds / 2592000)}mo ago`;
+            return `${Math.floor(seconds / 31536000)}y ago`;
         }
 
         function escapeHtml(text) {
@@ -752,8 +657,8 @@
             }
         }
 
-        function logout() {
-            handleLogout();
+        function openSettings() {
+            console.log('Settings clicked');
         }
 
         // Initialize

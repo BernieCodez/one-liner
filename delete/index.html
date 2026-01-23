@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Py1iner | Y-Axis Orbit</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="stars-container"><div class="stars"></div></div>
+
+    <div class="main-universe">
+        <div class="stage">
+            <h1 class="central-logo">Py<span>1</span>iner</h1>
+            
+            <div class="ring" id="ring">
+                <div class="card">Free Play</div>
+                <div class="card">Challenges</div>
+                <div class="card">Forums</div>
+                <div class="card">Wiki</div>
+                <div class="card">Custom</div>
+            </div>
+        </div>
+
+        <section class="terminal-window">
+            <div class="terminal-header">
+                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                <span class="title">auth_protocol.py</span>
+            </div>
+            <div class="terminal-body">
+                <p class="comment"># SYSTEM LOCKED: DEPLOY ENCRYPTION 12345</p>
+                <div class="code-line">
+                    <span class="prompt">>>></span>
+                    <input type="text" id="pass-input" placeholder="_ _ _ _ _" maxlength="5">
+                    <button id="go-btn">GO!</button>
+                </div>
+                <div id="log" class="output">Awaiting pilot credentials...</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

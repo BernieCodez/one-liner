@@ -217,6 +217,10 @@
                         <i class="fas fa-comments"></i>
                         <span>Forums</span>
                     </button>
+                    <button class="user-dropdown-item" onclick="openSettings(); toggleUserMenu();">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
                     {% if user %}
                         <button class="user-dropdown-item logout" onclick="handleLogout()">
                             <i class="fas fa-sign-out-alt"></i>

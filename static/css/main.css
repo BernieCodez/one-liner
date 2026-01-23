@@ -61,6 +61,7 @@ body {
 }
 
 .header {
+    height: 70px;
     background: var(--bg-secondary);
     padding: 15px 30px;
     border-bottom: 2px solid var(--border-accent);
@@ -189,7 +190,8 @@ body {
 }
 
 .user-dropdown-item:hover {
-    background: var(--hover-bg);
+
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .user-dropdown-item i {
@@ -253,8 +255,9 @@ body {
 }
 
 .panel-header {
+    height: 50px;
     background: var(--bg-secondary);
-    padding: 8px 12px;
+    padding: 12px 20px;
     border-bottom: 2px solid var(--border-accent);
     display: flex;
     justify-content: space-between;
@@ -443,6 +446,7 @@ body {
     gap: 10px;
     margin-bottom: 10px;
     align-items: center;
+    display: none;
 }
 
 .theme-selector {

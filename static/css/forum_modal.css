@@ -1,0 +1,417 @@
+/* Forum Post Modal Styles */
+
+/* Modal Overlay */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal.show {
+    display: flex;
+}
+
+/* Modal Content Container */
+.modal-content {
+    background: #252526;
+    border: 1px solid #3e3e3e;
+    border-radius: 12px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 30px;
+    border-bottom: 1px solid #3e3e3e;
+    background: #2d2d2d;
+    flex-shrink: 0;
+}
+
+.modal-header h2 {
+    color: #FFD343;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header h2::before {
+    content: '\f040';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 20px;
+    color: #3672a5;
+}
+
+/* Close Button */
+.close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #FFD343;
+    background: rgba(255, 211, 67, 0.1);
+    transform: rotate(90deg);
+}
+
+.close-btn:active {
+    transform: rotate(90deg) scale(0.95);
+}
+
+/* Modal Body - Scrollable Form Area */
+.modal-content form {
+    padding: 30px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Scrollbar styling for modal */
+.modal-content form::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content form::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.modal-content form::-webkit-scrollbar-thumb {
+    background: #3e3e3e;
+    border-radius: 4px;
+}
+
+.modal-content form::-webkit-scrollbar-thumb:hover {
+    background: #4a4a4a;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #FFD343;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-group label::before {
+    content: '\f02b';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 12px;
+    color: #3672a5;
+}
+
+.form-group:last-of-type label::before {
+    content: '\f036';
+}
+
+/* Input Field */
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    background: #1e1e1e;
+    border: 2px solid #3e3e3e;
+    border-radius: 8px;
+    color: #d4d4d4;
+    font-size: 15px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.form-group input:hover {
+    border-color: #4a4a4a;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3672a5;
+    background: #252526;
+    box-shadow: 0 0 0 3px rgba(54, 114, 165, 0.15);
+}
+
+.form-group input::placeholder {
+    color: #666;
+    font-style: italic;
+}
+
+/* Textarea Field */
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: #1e1e1e;
+    border: 2px solid #3e3e3e;
+    border-radius: 8px;
+    color: #d4d4d4;
+    font-size: 14px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    min-height: 280px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.form-group textarea:hover {
+    border-color: #4a4a4a;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3672a5;
+    background: #252526;
+    box-shadow: 0 0 0 3px rgba(54, 114, 165, 0.15);
+}
+
+.form-group textarea::placeholder {
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Markdown Help Text */
+.form-group textarea + .help-text {
+    display: block;
+    margin-top: 8px;
+    color: #888;
+    font-size: 12px;
+    font-style: italic;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 20px 30px;
+    border-top: 1px solid #3e3e3e;
+    background: #2d2d2d;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3672a5 0%, #4a8ec5 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(54, 114, 165, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #4a8ec5 0%, #5ba0d7 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(54, 114, 165, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(54, 114, 165, 0.3);
+}
+
+.btn-primary::before {
+    content: '\f1d8';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
+.btn-secondary {
+    background: #3e3e3e;
+    color: #d4d4d4;
+    border: 1px solid #4a4a4a;
+}
+
+.btn-secondary:hover {
+    background: #4a4a4a;
+    border-color: #555;
+}
+
+.btn-secondary:active {
+    background: #353535;
+}
+
+.btn-secondary::before {
+    content: '\f00d';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-height: 95vh;
+        border-radius: 8px;
+    }
+
+    .modal-header {
+        padding: 20px;
+    }
+
+    .modal-header h2 {
+        font-size: 18px;
+    }
+
+    .modal-content form {
+        padding: 20px;
+    }
+
+    .form-group textarea {
+        min-height: 200px;
+    }
+
+    .form-actions {
+        padding: 16px 20px;
+        flex-direction: column-reverse;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Character Counter (optional enhancement) */
+.char-counter {
+    text-align: right;
+    color: #888;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.char-counter.warning {
+    color: #FFD343;
+}
+
+.char-counter.error {
+    color: #f48771;
+}
+
+/* Loading State */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn.loading::before {
+    content: '\f110';
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success/Error Messages */
+.form-message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.form-message.success {
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid #3672a5;
+    color: #58a6ff;
+}
+
+.form-message.error {
+    background: rgba(244, 135, 113, 0.1);
+    border: 1px solid #f48771;
+    color: #f48771;
+}
+
+.form-message::before {
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 16px;
+}
+
+.form-message.success::before {
+    content: '\f058';
+}
+
+.form-message.error::before {
+    content: '\f06a';
+}
