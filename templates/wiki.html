@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Py1iner - Wiki</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #252526;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3e3e3e;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD343;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar-links a {
+            color: #d4d4d4;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: color 0.3s;
+        }
+
+        .navbar-links a:hover {
+            color: #FFD343;
+            background: rgba(255, 211, 67, 0.1);
+        }
+
+        .wiki-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #252526;
+            padding: 20px;
+            border-right: 1px solid #3e3e3e;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            color: #FFD343;
+            margin: 0;
+        }
+
+        .new-page-btn {
+            background: #3672a5;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .new-page-btn:hover {
+            background: #4a8ec5;
+        }
+
+        .page-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page-item {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .page-item:hover {
+            background: rgba(255, 211, 67, 0.1);
+        }
+
+        .page-item.active {
+            background: rgba(255, 211, 67, 0.2);
+            border-left: 3px solid #FFD343;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #3e3e3e;
+        }
+
+        .page-title {
+            font-size: 32px;
+            color: #FFD343;
+            margin: 0;
+        }
+
+        .page-actions button {
+            background: #3672a5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+
+        .page-actions button:hover {
+            background: #4a8ec5;
+        }
+
+        .page-actions button.delete-btn {
+            background: #dc3545;
+        }
+
+        .page-actions button.delete-btn:hover {
+            background: #c82333;
+        }
+
+        .wiki-content {
+            line-height: 1.8;
+            color: #d4d4d4;
+        }
+
+        .wiki-content h1 { font-size: 32px; color: #FFD343; margin-top: 30px; margin-bottom: 15px; }
+        .wiki-content h2 { font-size: 24px; color: #FFD343; margin-top: 25px; margin-bottom: 12px; }
+        .wiki-content h3 { font-size: 20px; color: #FFD343; margin-top: 20px; margin-bottom: 10px; }
+        .wiki-content p { margin-bottom: 15px; }
+        .wiki-content code {
+            background: #2d2d2d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #FFD343;
+            font-family: 'Courier New', monospace;
+        }
+        .wiki-content pre {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 3px solid #3672a5;
+            margin: 15px 0;
+        }
+        .wiki-content pre code {
+            background: none;
+            padding: 0;
+            color: #d4d4d4;
+        }
+        .wiki-content ul, .wiki-content ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        .wiki-content li {
+            margin-bottom: 8px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #252526;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #FFD343;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #d4d4d4;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d4d4d4;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #2d2d2d;
+            border: 1px solid #3e3e3e;
+            border-radius: 5px;
+            color: #d4d4d4;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .form-group textarea {
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #3672a5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4a8ec5;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .welcome-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .welcome-content h1 {
+            color: #FFD343;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-content h2 {
+            color: #3672a5;
+            margin-top: 30px;
+        }
+
+        .welcome-content .example-box {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #3672a5;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" style="text-decoration: none; display: flex; align-items: center;">
+            <h1 style="color: #FFD343;"> Py</h1> <h1 style="color: #3672a5;"> 1iner</h1>
+        </a>
+        <div class="nav-links" style="display: flex; gap: 15px; align-items: center;">
+            <a href="/" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Home</a>
+            <a href="/challenges" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Challenges</a>
+            <a href="/wiki" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Wiki</a>
+            <a href="/forums" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Forums</a>
+            <a href="/creator" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Create</a>
+        </div>
+        <div class="user-menu">
+            <div class="user-menu-trigger" onclick="toggleUserMenu()">
+                <i class="fas fa-user-circle"></i>
+                {% if user %}
+                    <span>Welcome, <strong>{{ user.username }}</strong></span>
+                {% else %}
+                    <span>Welcome, <strong>Guest</strong></span>
+                {% endif %}
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <div class="user-dropdown" id="user-dropdown">
+                <div class="user-dropdown-header">
+                    {% if user %}
+                        <div style="color: #d4d4d4; font-weight: 500; margin-bottom: 4px;">{{ user.username }}</div>
+                    {% else %}
+                        <div style="color: #d4d4d4; font-weight: 500; margin-bottom: 4px;">Guest</div>
+                    {% endif %}
+                </div>
+                <div class="user-dropdown-menu">
+                    <button class="user-dropdown-item" onclick="window.location.href='/challenges'">
+                        <i class="fas fa-code"></i>
+                        <span>Challenges</span>
+                    </button>
+                    <button class="user-dropdown-item" onclick="window.location.href='/forums'">
+                        <i class="fas fa-comments"></i>
+                        <span>Forums</span>
+                    </button>
+                    {% if user %}
+                        <button class="user-dropdown-item logout" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    {% else %}
+                        <button class="user-dropdown-item" onclick="window.location.href='/login'">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wiki-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Wiki Pages</h2>
+                <button class="new-page-btn" onclick="showCreateModal()">
+                    <i class="fas fa-plus"></i> New
+                </button>
+            </div>
+            <ul class="page-list" id="page-list">
+                <!-- Pages will be loaded here -->
+            </ul>
+        </div>
+
+        <div class="content-area">
+            <div id="page-view">
+                <!-- Page content will be loaded here -->
+                <div class="welcome-content">
+                    <h1>Welcome to Py1iner Wiki</h1>
+                    <p>Learn Python one-liner techniques, tricks, and best practices!</p>
+                    
+                    <h2>What You'll Find Here</h2>
+                    <p>Our wiki contains comprehensive tutorials and guides on:</p>
+                    <ul>
+                        <li>List comprehensions and generator expressions</li>
+                        <li>Lambda functions and functional programming</li>
+                        <li>Built-in functions like map, filter, and reduce</li>
+                        <li>String manipulation techniques</li>
+                        <li>Mathematical operations and shortcuts</li>
+                        <li>And much more!</li>
+                    </ul>
+
+                    <h2>Getting Started</h2>
+                    <p>Select a page from the sidebar to begin learning, or create a new page to share your knowledge with the community!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div class="modal" id="page-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">New Wiki Page</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="page-form" onsubmit="savePage(event)">
+                <div class="form-group">
+                    <label for="page-slug">Slug (URL-friendly name):</label>
+                    <input type="text" id="page-slug" required placeholder="e.g., list-comprehensions">
+                    <small style="color: #888;">Use lowercase letters, numbers, and dashes only</small>
+                </div>
+                <div class="form-group">
+                    <label for="page-title">Title:</label>
+                    <input type="text" id="page-title" required placeholder="e.g., List Comprehensions">
+                </div>
+                <div class="form-group">
+                    <label for="page-content">Content (Markdown):</label>
+                    <textarea id="page-content" required placeholder="Write your content in Markdown..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Page</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = null;
+        let editMode = false;
+
+        // Load all pages on startup
+        async function loadPages() {
+            try {
+                const response = await fetch('/api/wiki/pages');
+                const pages = await response.json();
+                
+                const pageList = document.getElementById('page-list');
+                pageList.innerHTML = '';
+                
+                if (pages.length === 0) {
+                    pageList.innerHTML = '<li style="color: #888; padding: 10px;">No pages yet</li>';
+                    return;
+                }
+                
+                pages.forEach(page => {
+                    const li = document.createElement('li');
+                    li.className = 'page-item';
+                    li.textContent = page.title;
+                    li.onclick = () => loadPage(page.slug);
+                    pageList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error loading pages:', error);
+            }
+        }
+
+        // Load a specific page
+        async function loadPage(slug) {
+            try {
+                const response = await fetch(`/api/wiki/page/${slug}`);
+                const page = await response.json();
+                
+                if (response.ok) {
+                    currentPage = page;
+                    displayPage(page);
+                    
+                    // Update active state
+                    document.querySelectorAll('.page-item').forEach(item => {
+                        item.classList.remove('active');
+                        if (item.textContent === page.title) {
+                            item.classList.add('active');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading page:', error);
+            }
+        }
+
+        function displayPage(page) {
+            const pageView = document.getElementById('page-view');
+            const htmlContent = marked.parse(page.content);
+            
+            pageView.innerHTML = `
+                <div class="page-header">
+                    <h1 class="page-title">${page.title}</h1>
+                    <div class="page-actions">
+                        <button onclick="editPage()"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="delete-btn" onclick="deletePage()"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+                <div class="wiki-content">
+                    ${htmlContent}
+                </div>
+            `;
+        }
+
+        function showCreateModal() {
+            editMode = false;
+            currentPage = null;
+            document.getElementById('modal-title').textContent = 'New Wiki Page';
+            document.getElementById('page-slug').value = '';
+            document.getElementById('page-slug').disabled = false;
+            document.getElementById('page-title').value = '';
+            document.getElementById('page-content').value = '';
+            document.getElementById('page-modal').classList.add('show');
+        }
+
+        function editPage() {
+            if (!currentPage) return;
+            
+            editMode = true;
+            document.getElementById('modal-title').textContent = 'Edit Wiki Page';
+            document.getElementById('page-slug').value = currentPage.slug;
+            document.getElementById('page-slug').disabled = true;
+            document.getElementById('page-title').value = currentPage.title;
+            document.getElementById('page-content').value = currentPage.content;
+            document.getElementById('page-modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('page-modal').classList.remove('show');
+        }
+
+        async function savePage(event) {
+            event.preventDefault();
+            
+            const slug = document.getElementById('page-slug').value;
+            const title = document.getElementById('page-title').value;
+            const content = document.getElementById('page-content').value;
+            
+            try {
+                let response;
+                if (editMode) {
+                    response = await fetch(`/api/wiki/page/${slug}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, content })
+                    });
+                } else {
+                    response = await fetch('/api/wiki/page', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ slug, title, content })
+                    });
+                }
+                
+                if (response.ok) {
+                    closeModal();
+                    await loadPages();
+                    loadPage(slug);
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to save page');
+                }
+            } catch (error) {
+                alert('Error saving page: ' + error.message);
+            }
+        }
+
+        async function deletePage() {
+            if (!currentPage) return;
+            
+            if (!confirm(`Are you sure you want to delete "${currentPage.title}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/wiki/page/${currentPage.slug}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    currentPage = null;
+                    document.getElementById('page-view').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-book"></i>
+                            <h2>Page Deleted</h2>
+                            <p>Select another page or create a new one</p>
+                        </div>
+                    `;
+                    await loadPages();
+                } else {
+                    alert('Failed to delete page');
+                }
+            } catch (error) {
+                alert('Error deleting page: ' + error.message);
+            }
+        }
+
+        // User menu dropdown
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('user-dropdown');
+            const trigger = document.querySelector('.user-menu-trigger');
+            dropdown.classList.toggle('show');
+            trigger.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu && !userMenu.contains(event.target)) {
+                const dropdown = document.getElementById('user-dropdown');
+                const trigger = document.querySelector('.user-menu-trigger');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                    trigger.classList.remove('active');
+                }
+            }
+        });
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Logout failed. Please try again.');
+            }
+        }
+
+        function logout() {
+            handleLogout();
+        }
+
+        // Load pages on startup
+        loadPages();
+    </script>
+</body>
+</html>

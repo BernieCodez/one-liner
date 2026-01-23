@@ -1,2 +1,1 @@
-if True:
-  hello
+print(input()[::-1])

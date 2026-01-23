@@ -2,6 +2,25 @@
 
 An interactive web platform for learning and practicing Python programming! Solve coding challenges ranging from elegant one-liners to full scripts with input handling.
 
+## 🎯 Quick Start
+
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run the application:**
+   ```bash
+   python app.py
+   ```
+
+3. **Open your browser:**
+   ```
+   http://localhost:5000
+   ```
+
+4. **Want your own challenges?** See [SETUP_YOUR_CHALLENGES.md](SETUP_YOUR_CHALLENGES.md) for easy customization!
+
 ## Features
 
 - 🎯 **15 Progressive Challenges** - From easy to hard difficulty levels
@@ -60,36 +79,15 @@ http://localhost:5000
 7. Once all tests pass, move to the next challenge!
 8. Your code is automatically saved - come back anytime to continue!
 
-## New Features (Code Saving & Settings)
+## Customizing Challenges
 
-### Code Saving
-- **Auto-Save**: Your code is automatically saved 2 seconds after you stop typing
-- **Dual Storage**: Code is saved both to your browser (localStorage) and the server
-- **Per-Challenge Storage**: Each challenge's code is saved separately
-- **Manual Save**: Click the "💾 Save" button to save immediately
-- **Save Status**: Visual indicator shows when code is being saved or has been saved
+Want to create your own problem set? It's easy!
 
-### Editor Settings
-Access the settings by clicking the "⚙️ Settings" button:
+1. Edit [setup_challenges.py](setup_challenges.py) with your 15 challenges
+2. Run `python setup_challenges.py`
+3. Restart the app
 
-**Appearance**
-- Choose from 4 color themes (VS Dark, VS Light, High Contrast variants)
-- Adjust font size (10-24px)
-
-**Editor Behavior**
-- Customize tab size/indentation (2-8 spaces)
-- Toggle between spaces and tabs
-- Configure word wrap options
-
-**Features**
-- Toggle minimap visibility
-- Choose line number display style
-- Enable/disable auto-save
-- Enable/disable format on paste
-
-All settings are saved and persist across sessions!
-
-For more details, see [NEW_FEATURES.md](NEW_FEATURES.md).
+See [SETUP_YOUR_CHALLENGES.md](SETUP_YOUR_CHALLENGES.md) for detailed instructions.
 
 ## Challenge Topics
 

@@ -24,6 +24,7 @@
             <div class="challenge-nav">
                 <button id="prev-btn" onclick="previousChallenge()"><i class="fas fa-chevron-left"></i> Previous</button>
                 <button id="next-btn" onclick="nextChallenge()">Next <i class="fas fa-chevron-right"></i></button>
+                <button class="settings-btn" onclick="window.location.href='/test'" style="background: #9d4edd;"><i class="fas fa-play"></i> Free Play</button>
                 <button class="settings-btn" onclick="window.location.href='/creator'" style="background: #28a745;"><i class="fas fa-plus"></i> Create Challenge</button>
             </div>
         </div>
@@ -167,6 +168,18 @@
             <div class="settings-section">
                 <h3>Appearance</h3>
                 <div class="setting-item">
+                    <div class="setting-label">
+                        UI Theme
+                        <div class="info-text">Choose between light and dark interface theme</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="settings-ui-theme">
+                            <option value="dark">Dark Theme</option>
+                            <option value="light">Light Theme</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="setting-item">
                     <div class="setting-label">Color Theme</div>
                     <div class="setting-control">
                         <select id="settings-theme">
@@ -299,7 +312,8 @@
             wordWrap: 'on',
             minimap: true,
             lineNumbers: 'on',
-            formatOnPaste: true
+            formatOnPaste: true,
+            uiTheme: 'dark'
         };
 
         // Initialize Monaco Editor
@@ -626,6 +640,7 @@
         function openSettings() {
             document.getElementById('settings-modal').classList.add('show');
             // Load current settings into modal
+            document.getElementById('settings-ui-theme').value = editorSettings.uiTheme || 'dark';
             document.getElementById('settings-theme').value = editorSettings.theme;
             document.getElementById('settings-font-size').value = editorSettings.fontSize;
             document.getElementById('settings-tab-size').value = editorSettings.tabSize;
@@ -642,6 +657,7 @@
 
         function applySettings() {
             // Read settings from modal
+            editorSettings.uiTheme = document.getElementById('settings-ui-theme').value;
             editorSettings.theme = document.getElementById('settings-theme').value;
             editorSettings.fontSize = parseInt(document.getElementById('settings-font-size').value);
             editorSettings.tabSize = parseInt(document.getElementById('settings-tab-size').value);
@@ -650,6 +666,9 @@
             editorSettings.minimap = document.getElementById('settings-minimap').checked;
             editorSettings.lineNumbers = document.getElementById('settings-line-numbers').value;
             editorSettings.formatOnPaste = document.getElementById('settings-format-on-paste').checked;
+
+            // Apply UI theme
+            applyUITheme(editorSettings.uiTheme);
 
             // Apply settings to editor
             monaco.editor.setTheme(editorSettings.theme);
@@ -677,8 +696,19 @@
                 editorSettings = { ...editorSettings, ...JSON.parse(savedSettings) };
             }
 
+            // Apply UI theme immediately
+            applyUITheme(editorSettings.uiTheme || 'dark');
+
             // Try to load from server
             loadSettingsFromServer();
+        }
+
+        function applyUITheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
         }
 
         async function saveSettingsToServer() {
@@ -702,6 +732,10 @@
                 
                 if (Object.keys(serverSettings).length > 0) {
                     editorSettings = { ...editorSettings, ...serverSettings };
+                    
+                    // Apply UI theme
+                    applyUITheme(editorSettings.uiTheme || 'dark');
+                    
                     // Apply loaded settings if editor exists
                     if (editor) {
                         monaco.editor.setTheme(editorSettings.theme);

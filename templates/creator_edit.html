@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Editor - Py1iner Coding Challenges</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png">
+    <link rel="manifest" href="/static/favicons/site.webmanifest">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/creator_edit.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <a href="/" style="text-decoration: none; display: flex; align-items: center;">
+            <h1 style="color: #FFD343; margin: 0;"> Py</h1> <h1 style="color: #3672a5; margin: 0;"> 1iner</h1>
+        </a>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h1 style="margin: 0; color: #d4d4d4; font-size: 24px;">
+                <i class="fas fa-edit"></i> <span id="headerTitle">Challenge Editor</span>
+            </h1>
+        </div>
+        <div class="nav-buttons">
+            <a href="/creator" class="btn"><i class="fas fa-arrow-left"></i> Back to List</a>
+            <button class="btn btn-success" onclick="saveChallenge()">
+                <i class="fas fa-save"></i> <span id="saveBtnText">Save Challenge</span>
+            </button>
+        </div>
+    </div>
+
+    <input type="hidden" id="editingId" value="">
+
+    <div class="main-container">
+        <!-- LEFT PANEL: Problem Description -->
+        <div class="panel left-panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-clipboard"></i> Problem Description</div>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="edit" onclick="switchMode('edit')">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="mode-btn" data-mode="preview" onclick="switchMode('preview')">
+                        <i class="fas fa-eye"></i> Preview
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <!-- Edit Mode -->
+                <div id="editMode" class="mode-content active">
+                    <div class="form-group">
+                        <label for="title"><i class="fas fa-heading"></i> Challenge Title *</label>
+                        <input type="text" id="title" placeholder="e.g., List Comprehension Basics" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="difficulty"><i class="fas fa-signal"></i> Difficulty *</label>
+                        <select id="difficulty" required>
+                            <option value="">Select difficulty</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description"><i class="fas fa-align-left"></i> Description (Markdown supported) *</label>
+                        <textarea id="description" placeholder="Describe the challenge. Use Markdown formatting." required></textarea>
+                        <div class="help-text">
+                            <i class="fas fa-info-circle"></i> Supports Markdown. Explain what the user needs to accomplish.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Mode -->
+                <div id="previewMode" class="mode-content">
+                    <div class="preview-header">
+                        <h2 id="previewTitle">Challenge Title</h2>
+                        <span id="previewDifficulty" class="difficulty"></span>
+                    </div>
+                    <div id="previewDescription" class="preview-description">
+                        Start typing to see preview...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MIDDLE PANEL: Python Editor -->
+        <div class="panel middle-panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-code"></i> Solution Editor</div>
+                <span class="editor-info">Monaco Editor • Python 3</span>
+            </div>
+            <div class="panel-content">
+                <div class="editor-wrapper">
+                    <div id="solutionEditor" class="monaco-editor"></div>
+                </div>
+                <div class="editor-actions">
+                    <button class="btn btn-test" onclick="testSolution()">
+                        <i class="fas fa-play"></i> Test Solution
+                    </button>
+                    <div id="testResults" class="test-results"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Test Cases -->
+        <div class="panel right-panel">
+            <div class="panel-header">
+                <div class="panel-title"><i class="fas fa-vial"></i> Test Cases</div>
+                <button class="btn btn-add-small" onclick="addTestCase()">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
+            <div class="panel-content">
+                <div id="testCasesContainer" class="test-cases-container">
+                    <!-- Test cases will be added here -->
+                </div>
+                <div class="help-text" style="margin-top: 15px;">
+                    <i class="fas fa-info-circle"></i> Add at least one test case to validate solutions
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        let testCaseCounter = 0;
+        let solutionEditor;
+        let editingId = null;
+
+        // Initialize Monaco Editor
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' } });
+        
+        require(['vs/editor/editor.main'], function() {
+            solutionEditor = monaco.editor.create(document.getElementById('solutionEditor'), {
+                value: '# Write your solution code here...\nprint([x**2 for x in range(1, 6)])',
+                language: 'python',
+                theme: 'vs-dark',
+                fontSize: 14,
+                minimap: { enabled: false },
+                automaticLayout: true,
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                renderWhitespace: 'selection',
+                tabSize: 4
+            });
+        });
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if we're editing an existing challenge
+            const pathParts = window.location.pathname.split('/');
+            if (pathParts[2] === 'edit' && pathParts[3]) {
+                editingId = parseInt(pathParts[3]);
+                document.getElementById('editingId').value = editingId;
+                document.getElementById('headerTitle').textContent = 'Edit Challenge';
+                document.getElementById('saveBtnText').textContent = 'Update Challenge';
+                loadChallenge(editingId);
+            } else {
+                // New challenge - add one empty test case
+                addTestCase();
+            }
+
+            // Setup live preview
+            setupLivePreview();
+        });
+
+        function setupLivePreview() {
+            const titleInput = document.getElementById('title');
+            const difficultySelect = document.getElementById('difficulty');
+            const descriptionTextarea = document.getElementById('description');
+
+            titleInput.addEventListener('input', updatePreview);
+            difficultySelect.addEventListener('change', updatePreview);
+            descriptionTextarea.addEventListener('input', updatePreview);
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('title').value || 'Challenge Title';
+            const difficulty = document.getElementById('difficulty').value || '';
+            const description = document.getElementById('description').value;
+
+            document.getElementById('previewTitle').textContent = title;
+            
+            const difficultyBadge = document.getElementById('previewDifficulty');
+            difficultyBadge.textContent = difficulty || 'Not Set';
+            difficultyBadge.className = 'difficulty';
+            if (difficulty) {
+                difficultyBadge.classList.add('difficulty-' + difficulty.toLowerCase());
+            }
+
+            const previewDiv = document.getElementById('previewDescription');
+            if (description.trim()) {
+                if (typeof marked !== 'undefined' && marked.parse) {
+                    previewDiv.innerHTML = marked.parse(description);
+                } else {
+                    previewDiv.textContent = description;
+                }
+            } else {
+                previewDiv.textContent = 'Start typing to see preview...';
+            }
+        }
+
+        function switchMode(mode) {
+            const editMode = document.getElementById('editMode');
+            const previewMode = document.getElementById('previewMode');
+            const editBtn = document.querySelector('[data-mode="edit"]');
+            const previewBtn = document.querySelector('[data-mode="preview"]');
+
+            if (mode === 'edit') {
+                editMode.classList.add('active');
+                previewMode.classList.remove('active');
+                editBtn.classList.add('active');
+                previewBtn.classList.remove('active');
+            } else {
+                editMode.classList.remove('active');
+                previewMode.classList.add('active');
+                editBtn.classList.remove('active');
+                previewBtn.classList.add('active');
+                updatePreview();
+            }
+        }
+
+        async function loadChallenge(id) {
+            try {
+                const response = await fetch(`/api/challenges/custom/${id}`);
+                const challenge = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('title').value = challenge.title;
+                    document.getElementById('difficulty').value = challenge.difficulty;
+                    document.getElementById('description').value = challenge.description;
+
+                    if (solutionEditor) {
+                        solutionEditor.setValue(challenge.solution || '');
+                    }
+
+                    // Load test cases
+                    document.getElementById('testCasesContainer').innerHTML = '';
+                    testCaseCounter = 0;
+                    challenge.test_cases.forEach(tc => {
+                        addTestCase(tc);
+                    });
+
+                    updatePreview();
+                } else {
+                    showNotification('❌ Error loading challenge', true);
+                }
+            } catch (error) {
+                showNotification('❌ Error: ' + error.message, true);
+            }
+        }
+
+        function addTestCase(testCase = null) {
+            testCaseCounter++;
+            const container = document.getElementById('testCasesContainer');
+            
+            const testCaseDiv = document.createElement('div');
+            testCaseDiv.className = 'test-case-item';
+            testCaseDiv.id = `testCase${testCaseCounter}`;
+            
+            testCaseDiv.innerHTML = `
+                <div class="test-case-header">
+                    <span class="test-case-number">
+                        <i class="fas fa-vial"></i> Test Case #${testCaseCounter}
+                    </span>
+                    <div class="test-case-actions">
+                        <button type="button" class="btn-icon" onclick="toggleTestCase(${testCaseCounter})" title="Collapse/Expand">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                        <button type="button" class="btn-icon btn-danger" onclick="removeTestCase(${testCaseCounter})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="test-case-content" id="content${testCaseCounter}">
+                    <div class="form-group">
+                        <label>Input (optional)</label>
+                        <textarea name="input_${testCaseCounter}" rows="2" placeholder="e.g., [1, 2, 3, 4, 5] or leave empty for None">${testCase ? (testCase.input || '') : ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Expected Output *</label>
+                        <textarea name="output_${testCaseCounter}" rows="2" required placeholder="e.g., [1, 4, 9, 16, 25]">${testCase ? testCase.expected : ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="hidden_${testCaseCounter}" ${testCase && testCase.hidden ? 'checked' : ''}>
+                            <span><i class="fas fa-eye-slash"></i> Hidden Test Case</span>
+                        </label>
+                        <div class="help-text">Hidden test cases only show pass/fail, not input/output</div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(testCaseDiv);
+        }
+
+        function removeTestCase(id) {
+            if (document.querySelectorAll('.test-case-item').length <= 1) {
+                showNotification('⚠️ You must have at least one test case', true);
+                return;
+            }
+            
+            const testCase = document.getElementById(`testCase${id}`);
+            if (testCase) {
+                testCase.remove();
+            }
+        }
+
+        function toggleTestCase(id) {
+            const content = document.getElementById(`content${id}`);
+            const button = event.target.closest('button');
+            const icon = button.querySelector('i');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                content.classList.add('collapsed');
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        async function testSolution() {
+            const code = solutionEditor.getValue().trim();
+            const testResults = document.getElementById('testResults');
+            
+            if (!code) {
+                testResults.className = 'test-results error show';
+                testResults.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please write some code to test';
+                return;
+            }
+            
+            // Collect test cases
+            const testCases = collectTestCases();
+            
+            if (testCases.length === 0) {
+                testResults.className = 'test-results error show';
+                testResults.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Please add at least one test case';
+                return;
+            }
+            
+            testResults.className = 'test-results info show';
+            testResults.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing solution...';
+            
+            try {
+                const response = await fetch('/api/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        challenge_id: -1,
+                        test_cases: testCases
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    testResults.className = 'test-results error show';
+                    testResults.innerHTML = `<i class="fas fa-times-circle"></i> <strong>Error:</strong> ${result.error}`;
+                } else {
+                    const passed = result.results.filter(r => r.passed).length;
+                    const total = result.results.length;
+                    
+                    if (passed === total) {
+                        testResults.className = 'test-results success show';
+                        let successMsg = `<i class="fas fa-check-circle"></i> <strong>All tests passed!</strong> (${total}/${total})`;
+                        
+                        if (result.is_one_liner) {
+                            successMsg += '<br><span style="color: #ffd700;"><i class="fas fa-bolt"></i> This solution is a one-liner!</span>';
+                        }
+                        
+                        testResults.innerHTML = successMsg;
+                    } else {
+                        testResults.className = 'test-results error show';
+                        let failedTests = result.results
+                            .map((r, i) => !r.passed ? `<br>• Test ${i+1}: Expected "${r.expected}", got "${r.actual}"` : '')
+                            .filter(x => x)
+                            .join('');
+                        testResults.innerHTML = `<i class="fas fa-exclamation-triangle"></i> <strong>${passed}/${total} tests passed</strong>${failedTests}`;
+                    }
+                }
+            } catch (error) {
+                testResults.className = 'test-results error show';
+                testResults.innerHTML = `<i class="fas fa-times-circle"></i> <strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        function collectTestCases() {
+            const testCases = [];
+            const testCaseElements = document.querySelectorAll('.test-case-item');
+            
+            testCaseElements.forEach((element) => {
+                const id = element.id.replace('testCase', '');
+                const input = document.querySelector(`textarea[name="input_${id}"]`).value;
+                const output = document.querySelector(`textarea[name="output_${id}"]`).value;
+                const hidden = document.querySelector(`input[name="hidden_${id}"]`).checked;
+                
+                if (output.trim()) {
+                    testCases.push({
+                        input: input || null,
+                        expected: output,
+                        description: `Test case ${testCases.length + 1}`,
+                        hidden: hidden
+                    });
+                }
+            });
+            
+            return testCases;
+        }
+
+        async function saveChallenge() {
+            const title = document.getElementById('title').value.trim();
+            const difficulty = document.getElementById('difficulty').value;
+            const description = document.getElementById('description').value.trim();
+            const solutionCode = solutionEditor.getValue().trim();
+            
+            // Validation
+            if (!title) {
+                showNotification('❌ Please enter a challenge title', true);
+                document.getElementById('title').focus();
+                return;
+            }
+            
+            if (!difficulty) {
+                showNotification('❌ Please select a difficulty level', true);
+                document.getElementById('difficulty').focus();
+                return;
+            }
+            
+            if (!description) {
+                showNotification('❌ Please enter a description', true);
+                document.getElementById('description').focus();
+                return;
+            }
+            
+            if (!solutionCode || solutionCode === '# Write your solution code here...\nprint([x**2 for x in range(1, 6)])') {
+                showNotification('❌ Solution code is required', true);
+                return;
+            }
+            
+            const testCases = collectTestCases();
+            
+            if (testCases.length === 0) {
+                showNotification('❌ Please add at least one test case', true);
+                return;
+            }
+            
+            // Validate solution against test cases
+            showNotification('🔍 Validating solution...', false);
+            
+            try {
+                const validateResponse = await fetch('/api/execute', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        code: solutionCode,
+                        challenge_id: -1,
+                        test_cases: testCases
+                    })
+                });
+                
+                const validateResult = await validateResponse.json();
+                
+                if (validateResult.error) {
+                    showNotification('❌ Solution validation failed: ' + validateResult.error, true);
+                    return;
+                }
+                
+                const passed = validateResult.results.filter(r => r.passed).length;
+                const total = validateResult.results.length;
+                
+                if (passed !== total) {
+                    showNotification('❌ Solution must pass all test cases before saving', true);
+                    testSolution(); // Show detailed results
+                    return;
+                }
+                
+                // Create challenge object
+                const challenge = {
+                    title: title,
+                    difficulty: difficulty,
+                    description: description,
+                    solution: solutionCode,
+                    test_cases: testCases
+                };
+                
+                const isEditing = editingId !== null;
+                const url = isEditing ? `/api/challenges/custom/${editingId}` : '/api/challenges/create';
+                const method = isEditing ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(challenge)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showNotification(isEditing ? '✅ Challenge updated successfully!' : '✅ Challenge created successfully!');
+                    setTimeout(() => {
+                        window.location.href = '/creator';
+                    }, 1500);
+                } else {
+                    showNotification('❌ Error: ' + (result.error || 'Failed to save challenge'), true);
+                }
+            } catch (error) {
+                showNotification('❌ Error: ' + error.message, true);
+            }
+        }
+
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification' + (isError ? ' error' : '');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

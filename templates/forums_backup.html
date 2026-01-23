@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Py1iner - Forums</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            min-height: 100vh;
+        }
+
+
+
+        .navbar-links a, .navbar-links button {
+            color: #d4d4d4;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+            padding: 8px 16px;
+            border-radius: 5px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .navbar-links a:hover, .navbar-links button:hover {
+            color: #FFD343;
+            background: rgba(255, 211, 67, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .forums-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .forums-header h1 {
+            color: #d4d4d4;
+            margin: 0;
+        }
+
+        .new-post-btn {
+            background: #3672a5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .new-post-btn:hover {
+            background: #2d5a85;
+        }
+
+        .new-post-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        .post-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .post-card {
+            background: #252526;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3672a5;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .post-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .post-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d4d4d4;
+            margin: 0;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .post-author {
+            color: #FFD343;
+        }
+
+        .post-content {
+            color: #b0b0b0;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 15px;
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #252526;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #d4d4d4;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-btn:hover {
+            color: #d4d4d4;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #d4d4d4;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #1e1e1e;
+            border: 1px solid #3e3e3e;
+            border-radius: 5px;
+            color: #d4d4d4;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background: #3672a5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            background: #2d5a85;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .reply-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #3e3e3e;
+        }
+
+        .reply-card {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .reply-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .login-prompt {
+            text-align: center;
+            padding: 40px;
+            background: #252526;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .login-prompt a {
+            color: #3672a5;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .login-prompt a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" style="text-decoration: none; display: flex; align-items: center;">
+            <h1 style="color: #FFD343;"> Py</h1> <h1 style="color: #3672a5;"> 1iner</h1>
+        </a>
+        <div class="challenge-selector">
+            <div class="challenge-nav">
+                <button class="settings-btn" onclick="window.location.href='/challenges'" style="background: #3672a5;"><i class="fas fa-code"></i> Challenges</button>
+                <button class="settings-btn" onclick="window.location.href='/test'" style="background: #9d4edd;"><i class="fas fa-play"></i> Free Play</button>
+                <button class="settings-btn" onclick="window.location.href='/creator'" style="background: #28a745;"><i class="fas fa-plus"></i> Create Challenge</button>
+            </div>
+        </div>
+        <div class="user-menu">
+            <div class="user-menu-trigger" onclick="toggleUserMenu()">
+                <i class="fas fa-user-circle"></i>
+                <span>Welcome, <strong id="username">{{ username }}</strong></span>
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <div class="user-dropdown" id="user-dropdown">
+                <div class="user-dropdown-header">
+                    <div style="color: #d4d4d4; font-weight: 500; margin-bottom: 4px;">{{ username }}</div>
+                    <div class="user-stats">
+                        <span><i class="fas fa-check-circle"></i> <span id="solved-count">0</span> solved</span>
+                        <span><i class="fas fa-plus-circle"></i> <span id="created-count">0</span> created</span>
+                    </div>
+                </div>
+                <div class="user-dropdown-menu">
+                    <button class="user-dropdown-item" onclick="window.location.href='/wiki'">
+                        <i class="fas fa-book"></i>
+                        <span>Wiki</span>
+                    </button>
+                    <button class="user-dropdown-item" onclick="window.location.href='/forums'">
+                        <i class="fas fa-comments"></i>
+                        <span>Forums</span>
+                    </button>
+                    <button class="user-dropdown-item" onclick="openSettings(); toggleUserMenu();">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
+                    <button class="user-dropdown-item logout" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="forums-header">
+            <h1><i class="fas fa-comments"></i> Forums</h1>
+            {% if username %}
+            <button class="new-post-btn" onclick="openNewPostModal()">
+                <i class="fas fa-plus"></i> New Post
+            </button>
+            {% else %}
+            <button class="new-post-btn" disabled title="Login to create posts">
+                <i class="fas fa-lock"></i> Login to Post
+            </button>
+            {% endif %}
+        </div>
+
+        {% if not username %}
+        <div class="login-prompt">
+            <i class="fas fa-lock" style="font-size: 48px; color: #888; margin-bottom: 15px;"></i>
+            <h2>Join the Discussion</h2>
+            <p>You need to <a href="/login">login</a> to create posts and participate in the forums.</p>
+        </div>
+        {% endif %}
+
+        <div class="post-list" id="post-list">
+            <!-- Posts will be loaded here -->
+        </div>
+
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <i class="fas fa-comments"></i>
+            <h2>No Posts Yet</h2>
+            <p>Be the first to start a discussion!</p>
+        </div>
+    </div>
+
+    <!-- New Post Modal -->
+    <div class="modal" id="new-post-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New Post</h2>
+                <button class="close-btn" onclick="closeNewPostModal()">&times;</button>
+            </div>
+            <form id="new-post-form" onsubmit="submitNewPost(event)">
+                <div class="form-group">
+                    <label for="post-title">Title</label>
+                    <input type="text" id="post-title" required maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label for="post-content">Content</label>
+                    <textarea id="post-content" required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Post</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Post Modal -->
+    <div class="modal" id="view-post-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="view-post-title"></h2>
+                <button class="close-btn" onclick="closeViewPostModal()">&times;</button>
+            </div>
+            <div class="post-meta">
+                <span class="post-author"><i class="fas fa-user"></i> <span id="view-post-author"></span></span>
+                <span><i class="far fa-clock"></i> <span id="view-post-date"></span></span>
+            </div>
+            <div class="post-content" id="view-post-content" style="white-space: pre-wrap; margin-top: 20px;"></div>
+            
+            <div class="reply-section">
+                <h3><i class="fas fa-reply"></i> Replies (<span id="reply-count">0</span>)</h3>
+                <div id="replies-list"></div>
+                
+                {% if username %}
+                <form id="reply-form" onsubmit="submitReply(event)" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label for="reply-content">Add a Reply</label>
+                        <textarea id="reply-content" required rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Reply</button>
+                </form>
+                {% else %}
+                <div style="text-align: center; padding: 20px; background: #1e1e1e; border-radius: 5px; margin-top: 20px;">
+                    <a href="/login" style="color: #3672a5;">Login to reply</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPostId = null;
+
+        function loadPosts() {
+            fetch('/api/forums/posts')
+                .then(response => response.json())
+                .then(data => {
+                    const postList = document.getElementById('post-list');
+                    const emptyState = document.getElementById('empty-state');
+                    
+                    if (data.posts.length === 0) {
+                        postList.style.display = 'none';
+                        emptyState.style.display = 'block';
+                    } else {
+                        postList.style.display = 'flex';
+                        emptyState.style.display = 'none';
+                        postList.innerHTML = data.posts.map(post => `
+                            <div class="post-card" onclick="viewPost(${post.id})">
+                                <div class="post-header">
+                                    <h3 class="post-title">${escapeHtml(post.title)}</h3>
+                                </div>
+                                <div class="post-meta">
+                                    <span class="post-author"><i class="fas fa-user"></i> ${escapeHtml(post.username)}</span>
+                                    <span><i class="far fa-clock"></i> ${formatDate(post.created_at)}</span>
+                                </div>
+                                <div class="post-content">${escapeHtml(post.content.substring(0, 200))}${post.content.length > 200 ? '...' : ''}</div>
+                                <div class="post-stats">
+                                    <span><i class="fas fa-reply"></i> ${post.reply_count} replies</span>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                });
+        }
+
+        function openNewPostModal() {
+            document.getElementById('new-post-modal').classList.add('active');
+        }
+
+        function closeNewPostModal() {
+            document.getElementById('new-post-modal').classList.remove('active');
+            document.getElementById('new-post-form').reset();
+        }
+
+        function submitNewPost(event) {
+            event.preventDefault();
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+
+            fetch('/api/forums/posts', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({title, content})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeNewPostModal();
+                    loadPosts();
+                } else {
+                    alert('Error creating post: ' + data.message);
+                }
+            });
+        }
+
+        function viewPost(postId) {
+            currentPostId = postId;
+            fetch(`/api/forums/posts/${postId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const post = data.post;
+                        document.getElementById('view-post-title').textContent = post.title;
+                        document.getElementById('view-post-author').textContent = post.username;
+                        document.getElementById('view-post-date').textContent = formatDate(post.created_at);
+                        document.getElementById('view-post-content').textContent = post.content;
+                        document.getElementById('reply-count').textContent = post.replies.length;
+                        
+                        const repliesList = document.getElementById('replies-list');
+                        repliesList.innerHTML = post.replies.map(reply => `
+                            <div class="reply-card">
+                                <div class="reply-header">
+                                    <span class="post-author"><i class="fas fa-user"></i> ${escapeHtml(reply.username)}</span>
+                                    <span style="color: #888; font-size: 12px;"><i class="far fa-clock"></i> ${formatDate(reply.created_at)}</span>
+                                </div>
+                                <div style="color: #d4d4d4; white-space: pre-wrap;">${escapeHtml(reply.content)}</div>
+                            </div>
+                        `).join('');
+                        
+                        document.getElementById('view-post-modal').classList.add('active');
+                    }
+                });
+        }
+
+        function closeViewPostModal() {
+            document.getElementById('view-post-modal').classList.remove('active');
+            document.getElementById('reply-form').reset();
+            currentPostId = null;
+        }
+
+        function submitReply(event) {
+            event.preventDefault();
+            const content = document.getElementById('reply-content').value;
+
+            fetch(`/api/forums/posts/${currentPostId}/replies`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({content})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('reply-content').value = '';
+                    viewPost(currentPostId); // Reload post with new reply
+                    loadPosts(); // Refresh post list
+                } else {
+                    alert('Error posting reply: ' + data.message);
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        // Load posts on page load
+        loadPosts();
+
+        // User menu functions
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('user-dropdown');
+            const trigger = document.querySelector('.user-menu-trigger');
+            dropdown.classList.toggle('show');
+            trigger.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('user-dropdown');
+            const trigger = document.querySelector('.user-menu-trigger');
+            
+            if (userMenu && !userMenu.contains(event.target)) {
+                dropdown.classList.remove('show');
+                trigger.classList.remove('active');
+            }
+        });
+
+        function openSettings() {
+            console.log('Settings clicked');
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Logout failed. Please try again.');
+            }
+        }
+
+        // Load user stats
+        fetch('/api/user/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('solved-count').textContent = data.solved_count;
+                    document.getElementById('created-count').textContent = data.created_count;
+                }
+            });
+    </script>
+</body>
+</html>

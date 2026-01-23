@@ -3,15 +3,46 @@
     "id": 1000,
     "title": "Speedy Libs",
     "difficulty": "Medium",
-    "description": "**Task:**\nGiven a singular word and a line of text, replace all \u2018{insert}\u2019s with the given word. \n\n**Input:**\nHello\n{insert} World!\n\n**Output:**\nHello World!\n\n**Explanation:**\nThe substring \u2018{insert}\u2019 is replaced by the word \u2018Hello\u2019 resulting in a sentence of \u2018Hello World!\u2019.\n",
+    "description": "**Task:**\nGiven a singular word and a line of text, replace all \u2018{insert}\u2019s with the given word. \n\n**Input:**\nHello\n{insert} World!\n\n**Output:**\nHello World!\n\n**Explanation:**\nThe substring \u2018{insert}\u2019 is replaced by the word \u2018Hello\u2019 resulting in a sentence of \u2018Hello World!\u2019.",
     "test_cases": [
       {
         "input": "Hello\n{insert} World!",
         "expected": "Hello World!",
-        "description": "Test case 1"
+        "description": "Test case 1",
+        "hidden": false
+      },
+      {
+        "input": "I\n{insert} am a proud programmer because {insert} was able to solve TH{insert}S challenging problem!",
+        "expected": "I am a proud programmer because I was able to solve THIS challenging problem!",
+        "description": "Test case 2",
+        "hidden": true
       }
     ],
-    "solution": "",
-    "custom": true
+    "solution": "print(__import__(\"re\").sub(\"{insert}\", input(), input()))",
+    "custom": true,
+    "solvable_in_one_line": true
+  },
+  {
+    "id": 1001,
+    "title": "You've got it backwards!",
+    "difficulty": "Easy",
+    "description": "**Task:**\n\nTurns out, you f***ed up. You got everything backwards. Reverse the input text to revert to normal state!\n\n**Input:**\n\n```nohtyp```\n\n**Output:**\n\n```python```\n\n**Explanation:**\nThe word 'nohtyp' when reversed becomes 'python'!",
+    "test_cases": [
+      {
+        "input": "nohtyp",
+        "expected": "python",
+        "description": "Test case 1",
+        "hidden": false
+      },
+      {
+        "input": "!enod llew yrev",
+        "expected": "very well done!",
+        "description": "Test case 2",
+        "hidden": true
+      }
+    ],
+    "solution": "print(input()[::-1])",
+    "custom": true,
+    "solvable_in_one_line": true
   }
 ]

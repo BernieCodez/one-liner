@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import sys
 from io import StringIO
 import traceback
@@ -6,8 +6,15 @@ import signal
 import contextlib
 import json
 import os
+import secrets
+from database import (
+    create_user, verify_user, 
+    create_forum_post, get_forum_posts, get_forum_post, create_forum_reply,
+    create_wiki_page, update_wiki_page, get_wiki_page, get_all_wiki_pages, delete_wiki_page
+)
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(32)
 
 # Directory for storing user code
 SAVED_CODE_DIR = 'saved_code'
@@ -36,491 +43,477 @@ def save_custom_challenges(challenges):
 CHALLENGES = [
     {
         "id": 1,
-        "title": "List Comprehension Basics",
+        "title": "🌍 First Contact",
         "difficulty": "Easy",
         "description": """
-## Challenge 1: Square Numbers
+## Challenge 1: First Contact
 
-Create a one-liner that returns a list of squares for numbers 1 through 5.
+You are sent in a space ship to circle the globe. Your space ship has entered orbit, the planet Earth glows before you. The commander asks you what you see. You respond with a simple phrase, "Hello World!".
 
-**Expected Output:** `[1, 4, 9, 16, 25]`
+**Expected Output:** `Hello World!`
 
-**Hint:** Use list comprehension with `range(1, 6)`
+**Explanation:** Print the string "Hello World!"
 
 **Example:**
 ```python
-# Your one-liner should create: [1, 4, 9, 16, 25]
+# Your one-liner should print: Hello World!
 ```
 """,
         "test_cases": [
             {
                 "input": None,
-                "expected": "[1, 4, 9, 16, 25]",
-                "description": "Should return squares of 1-5"
+                "expected": "Hello World!",
+                "description": "Should print 'Hello World!'"
             }
         ],
-        "solution": "print([x**2 for x in range(1, 6)])"
+        "solution": "print(\"Hello World!\")"
     },
     {
         "id": 2,
-        "title": "String Manipulation",
+        "title": "📡 The Backwards Transmission",
         "difficulty": "Easy",
         "description": """
-## Challenge 2: Reverse a String
+## Challenge 2: The Backwards Transmission
 
-Create a one-liner that reverses the string "Python".
+Your spaceship intercepts an alien transmission. The message appears garbled and incomprehensible. After running it through your ship's universal translator, you realize the aliens communicate by reversing their messages! To understand what they're saying, you need to read the transmission backwards.
 
-**Expected Output:** `"nohtyP"`
+**Input:** `!emosewa si nohtyP`
 
-**Hint:** Use string slicing with `[::-1]`
+**Expected Output:** `Python is awesome!`
+
+**Explanation:** The reverse of '!emosewa si nohtyP' is 'Python is awesome!'.
 
 **Example:**
 ```python
-# Your one-liner should reverse "Python" to "nohtyP"
+# Your one-liner should reverse the input string
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "nohtyP",
-                "description": "Should reverse 'Python'"
+                "input": "!emosewa si nohtyP",
+                "expected": "Python is awesome!",
+                "description": "Should reverse the input string"
+            },
+            {
+                "input": "!enod llew yreV",
+                "expected": "Very well done!",
+                "description": "Hidden test case"
             }
         ],
-        "solution": "print(\"Python\"[::-1])"
+        "solution": "print(input()[::-1])"
     },
     {
         "id": 3,
-        "title": "Filter Even Numbers",
+        "title": "☄️ The Odd Beacon Protocol",
         "difficulty": "Easy",
         "description": """
-## Challenge 3: Filter Even Numbers
+## Challenge 3: The Odd Beacon Protocol
 
-Create a one-liner that returns only even numbers from the list [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].
+Your ship's navigation computer has malfunctioned! The asteroid field ahead is marked with numbered beacons from 0 to N. The engineer explains that only the "strange" beacons are safe to pass through—these are beacons whose number, when divided by 2, leaves a remainder of 1. You need to identify all safe beacons to plot your course through the field.
 
-**Expected Output:** `[2, 4, 6, 8, 10]`
+**Input:** `7`
 
-**Hint:** Use list comprehension with an `if` condition
+**Expected Output:** `[1, 3, 5, 7]`
+
+**Explanation:** Starting from 0, check each number: 0÷2 has remainder 0 (unsafe). 1÷2 has remainder 1 (safe). 2÷2 has remainder 0 (unsafe). 3÷2 has remainder 1 (safe). This pattern continues through 7.
 
 **Example:**
 ```python
-# Your one-liner should filter: [2, 4, 6, 8, 10]
+# Your one-liner should return a list of odd numbers from 1 to N
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "[2, 4, 6, 8, 10]",
-                "description": "Should return even numbers from 1-10"
+                "input": "7",
+                "expected": "[1, 3, 5, 7]",
+                "description": "Should return list of odd numbers from 1 to 7"
+            },
+            {
+                "input": "68",
+                "expected": "[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67]",
+                "description": "Hidden test case with larger input"
             }
         ],
-        "solution": "print([x for x in range(1, 11) if x % 2 == 0])"
+        "solution": "print(list(range(1, int(input())+1, 2)))"
     },
     {
         "id": 4,
-        "title": "Dictionary Comprehension",
-        "difficulty": "Medium",
+        "title": "🔋 Power Cell Diagnostic",
+        "difficulty": "Easy",
         "description": """
-## Challenge 4: Create a Dictionary
+## Challenge 4: Power Cell Diagnostic
 
-Create a one-liner that creates a dictionary mapping numbers 1-5 to their cubes.
+Your cargo bay contains 99 fuel cells arranged along the wall. Each cell shows a charge level from 0 (empty) to 10 (full). Mission control asks you to check a specific fuel cell by its position to determine if you have enough power for the next jump to hyperspace. You'll receive the charge levels of all 99 cells, then the index of the cell to check.
 
-**Expected Output:** `{1: 1, 2: 8, 3: 27, 4: 64, 5: 125}`
+**Input:** 
+```
+7 5 2 0 6 7 6 9 5 3 2 2 1 8 2 9 10 0 2 4 8 0 6 10 5 5 1 5 7 9 8 9 2 3 7 2 5 2 9 3 4 9 2 0 10 3 4 0 5 6 4 7 10 2 3 4 9 5 5 5 0 5 10 6 5 0 2 6 4 2 3 5 10 0 7 1 1 4 0 6 1 7 0 6 10 4 1 3 5 4 9 4 2 2 4 9 10 3 0
+99
+```
 
-**Hint:** Use dictionary comprehension `{key: value for ...}`
+**Expected Output:** `0`
+
+**Explanation:** The 99th fuel cell (index 98 in 0-based indexing, or index 99 in 1-based) has a charge level of 0.
 
 **Example:**
 ```python
-# Your one-liner should create: {1: 1, 2: 8, 3: 27, 4: 64, 5: 125}
+# Your one-liner should get the value at the specified index
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "{1: 1, 2: 8, 3: 27, 4: 64, 5: 125}",
-                "description": "Should map numbers to their cubes"
+                "input": "7 5 2 0 6 7 6 9 5 3 2 2 1 8 2 9 10 0 2 4 8 0 6 10 5 5 1 5 7 9 8 9 2 3 7 2 5 2 9 3 4 9 2 0 10 3 4 0 5 6 4 7 10 2 3 4 9 5 5 5 0 5 10 6 5 0 2 6 4 2 3 5 10 0 7 1 1 4 0 6 1 7 0 6 10 4 1 3 5 4 9 4 2 2 4 9 10 3 0\n99",
+                "expected": "0",
+                "description": "Should return the 99th element"
             }
         ],
-        "solution": "print({x: x**3 for x in range(1, 6)})"
+        "solution": "print([int(x) for x in input().split()][int(input())-1])"
     },
     {
         "id": 5,
-        "title": "Lambda and Map",
-        "difficulty": "Medium",
+        "title": "🗺️ Treasure Coordinates",
+        "difficulty": "Easy",
         "description": """
-## Challenge 5: Double the Numbers
+## Challenge 5: Treasure Coordinates
 
-Create a one-liner using `map` and `lambda` to double all numbers in [1, 2, 3, 4, 5].
+You discover a derelict alien spacecraft floating in space. Inside, you find data tablets scattered across the floor. Each tablet displays a number—coordinates to a hidden treasure planet! Your ship's AI determines that you need to sum all the coordinates together to find the exact location.
 
-**Expected Output:** `[2, 4, 6, 8, 10]`
+**Input:** `1,2,3,4,5,6,7,8,9,10`
 
-**Hint:** Combine `list()`, `map()`, and a `lambda` function
+**Expected Output:** `55`
+
+**Explanation:** 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 = 55
 
 **Example:**
 ```python
-# Your one-liner should use map and lambda to get: [2, 4, 6, 8, 10]
+# Your one-liner should sum all comma-separated numbers
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "[2, 4, 6, 8, 10]",
-                "description": "Should double all numbers"
+                "input": "1,2,3,4,5,6,7,8,9,10",
+                "expected": "55",
+                "description": "Should sum all numbers"
+            },
+            {
+                "input": "46,99,53,50,23,60,57,98,52,45,65,27,100,93,57,56,87,91,47,81,84,44,86,25,62",
+                "expected": "1588",
+                "description": "Hidden test case with more numbers"
             }
         ],
-        "solution": "print(list(map(lambda x: x * 2, [1, 2, 3, 4, 5])))"
+        "solution": "print(sum([int(x) for x in input().split(',')]))"
     },
     {
         "id": 6,
-        "title": "Flatten a List",
+        "title": "🏆 Rally for the Rover",
         "difficulty": "Medium",
         "description": """
-## Challenge 6: Flatten Nested List
+## Challenge 6: Rally for the Rover
 
-Create a one-liner that flattens the nested list [[1, 2], [3, 4], [5, 6]].
+You're competing in the Galactic Rally Race for a brand new space rover (a Toyota, naturally). The final challenge is a pattern recognition test used by ancient star navigators. You watch other racers examining phrases and determining if they're palindromes—words that read the same forwards and backwards. You quickly code a program to help you win the rover!
 
-**Expected Output:** `[1, 2, 3, 4, 5, 6]`
+**Input:** `A Toyota`
 
-**Hint:** Use list comprehension with nested loops
+**Expected Output:** `True`
+
+**Explanation:** Converting "A Toyota" to lowercase and removing spaces gives "atoyota", which reads the same backwards—a perfect palindrome!
 
 **Example:**
 ```python
-# Your one-liner should flatten: [1, 2, 3, 4, 5, 6]
+# Your one-liner should check if the input is a palindrome (ignoring case and spaces)
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "[1, 2, 3, 4, 5, 6]",
-                "description": "Should flatten nested list"
+                "input": "A Toyota",
+                "expected": "True",
+                "description": "Should return True for palindrome"
+            },
+            {
+                "input": "Race cars",
+                "expected": "False",
+                "description": "Should return False for non-palindrome"
+            },
+            {
+                "input": "Pull up if I pull up",
+                "expected": "True",
+                "description": "Hidden test case"
+            },
+            {
+                "input": "waSsAw",
+                "expected": "True",
+                "description": "Hidden test case"
             }
         ],
-        "solution": "print([item for sublist in [[1, 2], [3, 4], [5, 6]] for item in sublist])"
+        "solution": "print((s:=input().replace(' ','').lower())==s[::-1])"
     },
     {
         "id": 7,
-        "title": "Sum of Squares",
+        "title": "⚛️ Quantum Factorial Duel",
         "difficulty": "Medium",
         "description": """
-## Challenge 7: Sum of Squares
+## Challenge 7: Quantum Factorial Duel
 
-Create a one-liner that calculates the sum of squares for numbers 1-10.
+You're approached by a quantum mathematician from the Andromeda galaxy who challenges you to a speed calculation duel. They rapidly call out numbers, and you must calculate their factorials before the hyperdrive cooldown expires! Each factorial represents the number of possible parallel universes at that quantum level.
 
-**Expected Output:** `385`
+**Input:** `5`
 
-**Hint:** Use `sum()` with a generator expression or list comprehension
+**Expected Output:** `120`
+
+**Explanation:** 5! = 5 × 4 × 3 × 2 × 1 = 120
 
 **Example:**
 ```python
-# Your one-liner should calculate: 1² + 2² + ... + 10² = 385
+# Your one-liner should calculate the factorial of the input number
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "385",
-                "description": "Should return sum of squares 1-10"
+                "input": "5",
+                "expected": "120",
+                "description": "Should calculate factorial of 5"
+            },
+            {
+                "input": "38",
+                "expected": "523022617466601111760007224100074291200000000",
+                "description": "Hidden test case with larger number"
             }
         ],
-        "solution": "print(sum(x**2 for x in range(1, 11)))"
+        "solution": "print(__import__(\"math\").factorial(int(input())))"
     },
     {
         "id": 8,
-        "title": "Filter and Transform",
-        "difficulty": "Hard",
+        "title": "⚡ Reactor Rod Status",
+        "difficulty": "Medium",
         "description": """
-## Challenge 8: Prime Numbers Squared
+## Challenge 8: Reactor Rod Status
 
-Create a one-liner that returns squares of prime numbers from 1 to 20.
+You're calibrating the ship's reactor core, which has numbered control rods from 1 to N. Every 3rd rod emits "Fizz" radiation, every 5th rod emits "Buzz" radiation, and every 15th rod emits both "FizzBuzz". You need to generate a diagnostic report showing each rod's status to ensure safe operation.
 
-**Expected Output:** `[4, 9, 25, 49, 121, 169, 289, 361]`
+**Input:** `15`
 
-**Hint:** Combine list comprehension with a condition that checks for primes (a number is prime if it has no divisors except 1 and itself)
+**Expected Output:** `[1, 2, 'Fizz', 4, 'Buzz', 'Fizz', 7, 8, 'Fizz', 'Buzz', 11, 'Fizz', 13, 14, 'FizzBuzz']`
+
+**Explanation:** Classic FizzBuzz problem with space-themed context.
 
 **Example:**
 ```python
-# Your one-liner should find primes in 1-20 and square them
+# Your one-liner should implement FizzBuzz
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "[4, 9, 25, 49, 121, 169, 289, 361]",
-                "description": "Should return squares of primes 2-19"
+                "input": "15",
+                "expected": "[1, 2, 'Fizz', 4, 'Buzz', 'Fizz', 7, 8, 'Fizz', 'Buzz', 11, 'Fizz', 13, 14, 'FizzBuzz']",
+                "description": "Should implement FizzBuzz for 1 to 15"
             }
         ],
-        "solution": "print([x**2 for x in range(2, 21) if all(x % i != 0 for i in range(2, int(x**0.5) + 1))])"
+        "solution": "print(['FizzBuzz'if i%15==0 else'Fizz'if i%3==0 else'Buzz'if i%5==0 else i for i in range(1,int(input())+1)])"
     },
     {
         "id": 9,
-        "title": "String Transformation",
-        "difficulty": "Hard",
+        "title": "🛰️ Duplicate Signal Filter",
+        "difficulty": "Medium",
         "description": """
-## Challenge 9: Vowel Capitalization
+## Challenge 9: Duplicate Signal Filter
 
-Create a one-liner that capitalizes only vowels in "hello world".
+Your ship's scanner has detected multiple objects in space, but the sensor array is malfunctioning and reporting some objects multiple times. You need to remove duplicate readings while maintaining the order in which objects were first detected to create an accurate star map.
 
-**Expected Output:** `"hEllO wOrld"`
+**Input:** `1,2,3,2,4,1,5`
 
-**Hint:** Use join with a conditional expression in a generator
+**Expected Output:** `[1, 2, 3, 4, 5]`
+
+**Explanation:** Remove duplicates while preserving order.
 
 **Example:**
 ```python
-# Your one-liner should transform: "hello world" -> "hEllO wOrld"
+# Your one-liner should remove duplicates while preserving order
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "hEllO wOrld",
-                "description": "Should capitalize only vowels"
+                "input": "1,2,3,2,4,1,5",
+                "expected": "[1, 2, 3, 4, 5]",
+                "description": "Should remove duplicates while preserving order"
             }
         ],
-        "solution": "print(\"\".join(c.upper() if c in 'aeiou' else c for c in \"hello world\"))"
+        "solution": "print(list(dict.fromkeys(map(int,input().split(',')))))"
     },
     {
         "id": 10,
-        "title": "Fibonacci Sequence",
-        "difficulty": "Hard",
+        "title": "🌙 Distress Signal Strength",
+        "difficulty": "Medium",
         "description": """
-## Challenge 10: Fibonacci One-Liner
+## Challenge 10: Distress Signal Strength
 
-Create a one-liner that generates the first 10 Fibonacci numbers.
+Your ship receives a distress signal from a distant moon. The message is heavily corrupted by solar interference. Your communications officer explains that the signal strength can be determined by counting the vowels (a, e, i, o, u) in the transmission—more vowels mean a stronger, more urgent signal.
 
-**Expected Output:** `[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]`
+**Input:** `Hello World`
 
-**Hint:** Use a lambda with reduce or a creative list comprehension approach
+**Expected Output:** `3`
+
+**Explanation:** The vowels found are: e, o, o
 
 **Example:**
 ```python
-# Your one-liner should generate: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+# Your one-liner should count vowels in the input
 ```
 """,
         "test_cases": [
             {
-                "input": None,
-                "expected": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]",
-                "description": "Should return first 10 Fibonacci numbers"
+                "input": "Hello World",
+                "expected": "3",
+                "description": "Should count vowels (e, o, o)"
             }
         ],
-        "solution": "print([0, 1] + [(lambda f: f(f, 10, 2, [0, 1]))(lambda f, n, i, acc: acc if i >= n else f(f, n, i+1, acc + [acc[-1] + acc[-2]]))])"
+        "solution": "print(sum(c.lower() in 'aeiou' for c in input()))"
     },
     {
         "id": 11,
-        "title": "Sum Two Numbers",
-        "difficulty": "Easy",
+        "title": "💎 The Glowing Tablets",
+        "difficulty": "Hard",
         "description": """
-## Challenge 11: Sum Two Numbers from Input
+## Challenge 11: The Glowing Tablets
 
-Write a program that reads two space-separated integers from input and prints their sum.
+You return to the derelict alien spacecraft, but now you notice that only certain data tablets are glowing—these have the word "sum" marked on their backs. The ship's AI corrects you: only the coordinates from the glowing tablets should be added together. The others are decoys meant to throw off treasure hunters!
 
-**Input Format:** Two integers separated by a space (e.g., "5 3")
+**Input:** `(1, ' '),(2, ' '),(3, ' '),(4, 'sum'),(5, ' '),(6, 'sum'),(7, ' '),(8, 'sum'),(9, 'sum'),(10, ' ')`
 
-**Output Format:** The sum of the two numbers (e.g., "8")
+**Expected Output:** `27`
+
+**Explanation:** Only tablets marked with 'sum' (4, 6, 8, and 9) should be added: 4 + 6 + 8 + 9 = 27
 
 **Example:**
+```python
+# Your one-liner should extract and sum only numbers with 'sum' marker
 ```
-Input: 5 3
-Output: 8
-```
-
-**Hint:** Use `input()` to read the line, `split()` to separate values, and `int()` to convert strings to integers.
-
-**Note:** Your output should match exactly - just print the number with no extra text.
 """,
         "test_cases": [
             {
-                "input": "5 3",
-                "expected": "8",
-                "description": "Sum of 5 and 3"
-            },
-            {
-                "input": "10 20",
-                "expected": "30",
-                "description": "Sum of 10 and 20"
-            },
-            {
-                "input": "-5 15",
-                "expected": "10",
-                "description": "Sum with negative number"
+                "input": "(1, ' '),(2, ' '),(3, ' '),(4, 'sum'),(5, ' '),(6, 'sum'),(7, ' '),(8, 'sum'),(9, 'sum'),(10, ' ')",
+                "expected": "27",
+                "description": "Should sum only numbers marked with 'sum'"
             }
         ],
-        "solution": "a, b = map(int, input().split())\nprint(a + b)"
+        "solution": "print(sum([int(x) for x in __import__('re').findall(r\"\\((\\w+), 'sum'\\)\",input())]))"
     },
     {
         "id": 12,
-        "title": "Greeting with Name",
-        "difficulty": "Easy",
+        "title": "🛡️ Prime Shield Frequencies",
+        "difficulty": "Hard",
         "description": """
-## Challenge 12: Personalized Greeting
+## Challenge 12: Prime Shield Frequencies
 
-Write a program that reads a name from input and prints a greeting.
+Your ship's shields operate on prime-numbered frequency bands to avoid interference from cosmic radiation. The shield generator needs to identify all available prime frequencies up to a maximum value to establish optimal protection during solar flare season.
 
-**Input Format:** A single line with a name (e.g., "Alice")
+**Input:** `20`
 
-**Output Format:** "Hello, [name]!" (e.g., "Hello, Alice!")
+**Expected Output:** `[2, 3, 5, 7, 11, 13, 17, 19]`
+
+**Explanation:** Find all prime numbers from 2 to N.
 
 **Example:**
+```python
+# Your one-liner should generate a list of prime numbers
 ```
-Input: Alice
-Output: Hello, Alice!
-```
-
-**Hint:** Use `input()` to read the name and f-strings or string concatenation for formatting.
 """,
         "test_cases": [
             {
-                "input": "Alice",
-                "expected": "Hello, Alice!",
-                "description": "Greeting for Alice"
-            },
-            {
-                "input": "Bob",
-                "expected": "Hello, Bob!",
-                "description": "Greeting for Bob"
-            },
-            {
-                "input": "Charlie",
-                "expected": "Hello, Charlie!",
-                "description": "Greeting for Charlie"
+                "input": "20",
+                "expected": "[2, 3, 5, 7, 11, 13, 17, 19]",
+                "description": "Should return all primes up to 20"
             }
         ],
-        "solution": "name = input()\nprint(f'Hello, {name}!')"
+        "solution": "print([x for x in range(2,int(input())+1)if all(x%i!=0 for i in range(2,int(x**0.5)+1))])"
     },
     {
         "id": 13,
-        "title": "Count Words",
-        "difficulty": "Medium",
+        "title": "🪐 Planetary Classification System",
+        "difficulty": "Hard",
         "description": """
-## Challenge 13: Count Words in a Sentence
+## Challenge 13: Planetary Classification System
 
-Write a program that reads a sentence and prints the number of words in it.
+You're decoding an encrypted alien message system where anagrams (words with the same letters rearranged) belong to the same conceptual group. The aliens use this to categorize star systems—all systems with rearranged letters share similar properties. Group the words to unlock their classification system.
 
-**Input Format:** A single line with a sentence (e.g., "The quick brown fox")
+**Input:** `listen,silent,hello,enlist`
 
-**Output Format:** The number of words (e.g., "4")
+**Expected Output:** `[['listen', 'silent', 'enlist'], ['hello']]`
+
+**Explanation:** Group anagrams together.
 
 **Example:**
+```python
+# Your one-liner should group anagrams
 ```
-Input: The quick brown fox
-Output: 4
-```
-
-**Hint:** Use `split()` to break the sentence into words and `len()` to count them.
 """,
         "test_cases": [
             {
-                "input": "The quick brown fox",
-                "expected": "4",
-                "description": "Four words"
-            },
-            {
-                "input": "Hello",
-                "expected": "1",
-                "description": "Single word"
-            },
-            {
-                "input": "Python is an amazing programming language",
-                "expected": "6",
-                "description": "Six words"
+                "input": "listen,silent,hello,enlist",
+                "expected": "[['listen', 'silent', 'enlist'], ['hello']]",
+                "description": "Should group anagrams together"
             }
         ],
-        "solution": "sentence = input()\nprint(len(sentence.split()))"
+        "solution": "print(list({k:[w for w in(l:=input().split(','))if sorted(w)==list(k)]for k in{tuple(sorted(w))for w in l}}.values()))"
     },
     {
         "id": 14,
-        "title": "Temperature Converter",
-        "difficulty": "Medium",
+        "title": "🔐 Pirate-Proof Encryption",
+        "difficulty": "Hard",
         "description": """
-## Challenge 14: Celsius to Fahrenheit
+## Challenge 14: Pirate-Proof Encryption
 
-Write a program that reads a temperature in Celsius and converts it to Fahrenheit.
+Your communications are being intercepted by space pirates! To send secure messages back to your home base, you implement a Caesar cipher with a shift of 3—a classic encryption technique where each letter is shifted 3 positions forward in the alphabet. Encrypt your message before transmission!
 
-**Formula:** F = (C × 9/5) + 32
+**Input:** `Hello World!`
 
-**Input Format:** A number representing temperature in Celsius (e.g., "25")
+**Expected Output:** `Khoor Zruog!`
 
-**Output Format:** The temperature in Fahrenheit rounded to 1 decimal place (e.g., "77.0")
+**Explanation:** Shift each letter by 3 positions. Non-letters remain unchanged.
 
 **Example:**
+```python
+# Your one-liner should implement Caesar cipher with shift 3
 ```
-Input: 25
-Output: 77.0
-```
-
-**Hint:** Use `float()` to convert input, apply the formula, and `round()` for precision.
 """,
         "test_cases": [
             {
-                "input": "25",
-                "expected": "77.0",
-                "description": "25°C to Fahrenheit"
-            },
-            {
-                "input": "0",
-                "expected": "32.0",
-                "description": "0°C to Fahrenheit"
-            },
-            {
-                "input": "100",
-                "expected": "212.0",
-                "description": "100°C to Fahrenheit"
-            },
-            {
-                "input": "-40",
-                "expected": "-40.0",
-                "description": "-40°C to Fahrenheit"
+                "input": "Hello World!",
+                "expected": "Khoor Zruog!",
+                "description": "Should encrypt using Caesar cipher with shift 3"
             }
         ],
-        "solution": "celsius = float(input())\nfahrenheit = round((celsius * 9/5) + 32, 1)\nprint(fahrenheit)"
+        "solution": "print(''.join(chr((ord(c)-65+3)%26+65)if c.isupper()else chr((ord(c)-97+3)%26+97)if c.islower()else c for c in input()))"
     },
     {
         "id": 15,
-        "title": "List Statistics",
+        "title": "🌟 Second Star to the Right",
         "difficulty": "Hard",
         "description": """
-## Challenge 15: Calculate List Statistics
+## Challenge 15: Second Star to the Right
 
-Write a program that reads a list of space-separated integers and prints their sum, average (rounded to 2 decimals), and maximum value on separate lines.
+Your ship is approaching a cluster of planets for potential colonization. You need to identify the second-largest planet by mass—the largest is a gas giant unsuitable for landing, but the second-largest might be perfect. Find the second-highest value from the planetary mass readings.
 
-**Input Format:** Space-separated integers (e.g., "10 20 30 40 50")
+**Input:** `10,5,20,15,20,8`
 
-**Output Format:** Three lines:
-- Sum
-- Average (2 decimal places)
-- Maximum
+**Expected Output:** `15`
+
+**Explanation:** After removing duplicates and sorting, the second-largest unique value is 15.
 
 **Example:**
+```python
+# Your one-liner should find the second-largest unique value
 ```
-Input: 10 20 30 40 50
-Output:
-150
-30.00
-50
-```
-
-**Hint:** Use `map(int, input().split())` to parse numbers, then use `sum()`, `len()`, and `max()`.
 """,
         "test_cases": [
             {
-                "input": "10 20 30 40 50",
-                "expected": "150\n30.00\n50",
-                "description": "Statistics for [10, 20, 30, 40, 50]"
-            },
-            {
-                "input": "5 5 5 5",
-                "expected": "20\n5.00\n5",
-                "description": "All same numbers"
-            },
-            {
-                "input": "100 1 50",
-                "expected": "151\n50.33\n100",
-                "description": "Three numbers with varying values"
+                "input": "10,5,20,15,20,8",
+                "expected": "15",
+                "description": "Should return second-largest unique value"
             }
         ],
-        "solution": "numbers = list(map(int, input().split()))\nprint(sum(numbers))\nprint(f'{sum(numbers)/len(numbers):.2f}')\nprint(max(numbers))"
+        "solution": "print(sorted(set(map(int,input().split(','))))[-2])"
     }
 ]
-
 class TimeoutError(Exception):
     pass
 
@@ -529,11 +522,209 @@ def timeout_handler(signum, frame):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('home.html', user=session.get('user'))
+
+@app.route('/challenges')
+def challenges():
+    user = session.get('user')
+    return render_template('index.html', user=user, username=user.get('username') if user else 'Guest')
+
+@app.route('/test')
+def test_page():
+    user = session.get('user')
+    return render_template('freeplay.html', user=user, username=user.get('username') if user else 'Guest')
+
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
+# Authentication routes
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+    
+    success, result = create_user(username, password)
+    if success:
+        return jsonify({"success": True, "message": "User created successfully"}), 201
+    else:
+        return jsonify({"error": result}), 400
+
+@app.route('/api/auth/signup', methods=['POST'])
+def signup():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+    
+    success, result = create_user(username, password)
+    if success:
+        user_data = {'id': result, 'username': username}
+        session['user'] = user_data
+        return jsonify({"success": True, "user": user_data}), 201
+    else:
+        return jsonify({"error": result}), 400
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({"error": "Username and password required"}), 400
+    
+    success, result = verify_user(username, password)
+    if success:
+        session['user'] = result
+        return jsonify({"success": True, "user": result})
+    else:
+        return jsonify({"error": result}), 401
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    session.pop('user', None)
+    return jsonify({"success": True})
+
+@app.route('/api/auth/me')
+def get_current_user():
+    user = session.get('user')
+    if user:
+        return jsonify({"user": user})
+    return jsonify({"user": None})
+
+# Wiki routes
+@app.route('/wiki')
+def wiki():
+    return render_template('wiki.html', user=session.get('user'))
+
+@app.route('/api/wiki/pages')
+def get_wiki_pages():
+    pages = get_all_wiki_pages()
+    return jsonify(pages)
+
+@app.route('/api/wiki/page/<slug>')
+def api_get_wiki_page(slug):
+    page = get_wiki_page(slug)
+    if page:
+        return jsonify(page)
+    return jsonify({"error": "Page not found"}), 404
+
+@app.route('/api/wiki/page', methods=['POST'])
+def api_create_wiki_page():
+    data = request.json
+    slug = data.get('slug')
+    title = data.get('title')
+    content = data.get('content')
+    
+    if not all([slug, title, content]):
+        return jsonify({"error": "Slug, title, and content required"}), 400
+    
+    success, result = create_wiki_page(slug, title, content)
+    if success:
+        return jsonify({"success": True, "page_id": result}), 201
+    else:
+        return jsonify({"error": result}), 400
+
+@app.route('/api/wiki/page/<slug>', methods=['PUT'])
+def api_update_wiki_page(slug):
+    data = request.json
+    title = data.get('title')
+    content = data.get('content')
+    
+    if not all([title, content]):
+        return jsonify({"error": "Title and content required"}), 400
+    
+    success = update_wiki_page(slug, title, content)
+    if success:
+        return jsonify({"success": True})
+    else:
+        return jsonify({"error": "Failed to update page"}), 500
+
+@app.route('/api/wiki/page/<slug>', methods=['DELETE'])
+def api_delete_wiki_page(slug):
+    success = delete_wiki_page(slug)
+    if success:
+        return jsonify({"success": True})
+    else:
+        return jsonify({"error": "Failed to delete page"}), 500
+
+# Forum routes
+@app.route('/forums')
+def forums():
+    return render_template('forums.html', user=session.get('user'))
+
+@app.route('/api/forums/posts')
+def api_get_forum_posts():
+    limit = request.args.get('limit', 50, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    posts = get_forum_posts(limit, offset)
+    return jsonify(posts)
+
+@app.route('/api/forums/post/<int:post_id>')
+def api_get_forum_post(post_id):
+    post = get_forum_post(post_id)
+    if post:
+        return jsonify(post)
+    return jsonify({"error": "Post not found"}), 404
+
+@app.route('/api/forums/post', methods=['POST'])
+def api_create_forum_post():
+    user = session.get('user')
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    data = request.json
+    title = data.get('title')
+    content = data.get('content')
+    
+    if not all([title, content]):
+        return jsonify({"error": "Title and content required"}), 400
+    
+    success, result = create_forum_post(user['id'], title, content)
+    if success:
+        return jsonify({"success": True, "post_id": result}), 201
+    else:
+        return jsonify({"error": result}), 500
+
+@app.route('/api/forums/post/<int:post_id>/reply', methods=['POST'])
+def api_create_forum_reply(post_id):
+    user = session.get('user')
+    if not user:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    data = request.json
+    content = data.get('content')
+    
+    if not content:
+        return jsonify({"error": "Content required"}), 400
+    
+    success, result = create_forum_reply(post_id, user['id'], content)
+    if success:
+        return jsonify({"success": True, "reply_id": result}), 201
+    else:
+        return jsonify({"error": result}), 500
 
 @app.route('/creator')
-def creator():
-    return render_template('creator.html')
+def creator_list():
+    """Show list of user's custom challenges"""
+    return render_template('creator_list.html')
+
+@app.route('/creator/new')
+def creator_new():
+    """Create a new custom challenge"""
+    return render_template('creator_edit.html')
+
+@app.route('/creator/edit/<int:challenge_id>')
+def creator_edit(challenge_id):
+    """Edit an existing custom challenge"""
+    return render_template('creator_edit.html', challenge_id=challenge_id)
 
 @app.route('/api/challenges')
 def get_challenges():
@@ -585,22 +776,33 @@ def execute_code():
     data = request.get_json()
     code = data.get('code', '').strip()
     challenge_id = data.get('challenge_id')
+    custom_test_cases = data.get('test_cases')  # For custom challenges being created
     
     if not code:
         return jsonify({"error": "No code provided"}), 400
     
-    # Check both built-in and custom challenges
-    custom = load_custom_challenges()
-    all_challenges = CHALLENGES + custom
-    
-    challenge = next((c for c in all_challenges if c["id"] == challenge_id), None)
-    if not challenge:
-        return jsonify({"error": "Challenge not found"}), 404
+    # If custom test cases are provided (during creation/editing), use them
+    if custom_test_cases:
+        test_cases = custom_test_cases
+    else:
+        # Check both built-in and custom challenges
+        custom = load_custom_challenges()
+        all_challenges = CHALLENGES + custom
+        
+        challenge = next((c for c in all_challenges if c["id"] == challenge_id), None)
+        if not challenge:
+            return jsonify({"error": "Challenge not found"}), 404
+        
+        test_cases = challenge["test_cases"]
     
     results = []
     all_passed = True
     
-    for test_case in challenge["test_cases"]:
+    # Check if solution is a one-liner (no semicolons, newlines except at end)
+    code_stripped = code.strip()
+    is_one_liner = '\n' not in code_stripped and ';' not in code_stripped
+    
+    for test_case in test_cases:
         try:
             # Capture output and setup input
             old_stdout = sys.stdout
@@ -680,8 +882,77 @@ def execute_code():
     
     return jsonify({
         "passed": all_passed,
-        "results": results
+        "results": results,
+        "is_one_liner": is_one_liner
     })
+
+@app.route('/api/execute-general', methods=['POST'])
+def execute_general():
+    """Execute user's code in general mode (free play) with custom input"""
+    data = request.get_json()
+    code = data.get('code', '').strip()
+    user_input = data.get('input', '')
+    
+    if not code:
+        return jsonify({"success": False, "error": "No code provided"}), 400
+    
+    try:
+        # Capture output and setup input
+        old_stdout = sys.stdout
+        old_stdin = sys.stdin
+        sys.stdout = StringIO()
+        
+        # Setup stdin with user's custom input
+        sys.stdin = StringIO(user_input)
+        
+        # Execute code with full built-ins support
+        namespace = {'__builtins__': __builtins__, '__name__': '__main__'}
+        
+        # Set timeout
+        try:
+            signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(10)  # 10 second timeout for free play
+        except (AttributeError, ValueError):
+            pass  # Windows doesn't support SIGALRM
+        
+        # Execute the code
+        exec(code, namespace)
+        
+        # Cancel timeout
+        try:
+            signal.alarm(0)
+        except (AttributeError, ValueError):
+            pass
+        
+        # Get the output
+        output = sys.stdout.getvalue()
+        
+        # Restore stdout and stdin
+        sys.stdout = old_stdout
+        sys.stdin = old_stdin
+        
+        return jsonify({
+            "success": True,
+            "output": output
+        })
+        
+    except TimeoutError:
+        sys.stdout = old_stdout
+        sys.stdin = old_stdin
+        return jsonify({
+            "success": False,
+            "error": "Execution timed out (max 10 seconds)",
+            "traceback": ""
+        })
+    except Exception as e:
+        sys.stdout = old_stdout
+        sys.stdin = old_stdin
+        error_msg = str(e) if str(e) else type(e).__name__
+        return jsonify({
+            "success": False,
+            "error": error_msg,
+            "traceback": traceback.format_exc()
+        })
 
 @app.route('/api/save-code', methods=['POST'])
 def save_code():
@@ -763,6 +1034,10 @@ def create_challenge():
         else:
             new_id = 1000
         
+        # Check if solution is a one-liner
+        solution_stripped = data['solution'].strip()
+        is_one_liner = '\n' not in solution_stripped and ';' not in solution_stripped
+        
         # Create new challenge
         new_challenge = {
             "id": new_id,
@@ -771,7 +1046,8 @@ def create_challenge():
             "description": data['description'],
             "test_cases": data['test_cases'],
             "solution": data['solution'],
-            "custom": True
+            "custom": True,
+            "solvable_in_one_line": is_one_liner
         }
         
         # Add to list and save
@@ -826,6 +1102,11 @@ def update_challenge(challenge_id):
         if challenge_index is None:
             return jsonify({"error": "Challenge not found"}), 404
         
+        # Check if solution is a one-liner
+        solution = data.get('solution', '')
+        solution_stripped = solution.strip()
+        is_one_liner = '\n' not in solution_stripped and ';' not in solution_stripped
+        
         # Update challenge
         custom_challenges[challenge_index] = {
             "id": challenge_id,
@@ -833,8 +1114,9 @@ def update_challenge(challenge_id):
             "difficulty": data['difficulty'],
             "description": data['description'],
             "test_cases": data['test_cases'],
-            "solution": data.get('solution', ''),
-            "custom": True
+            "solution": solution,
+            "custom": True,
+            "solvable_in_one_line": is_one_liner
         }
         
         # Save updated list

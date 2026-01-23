@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Py1iner - Forums</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicons/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: #252526;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3e3e3e;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD343;
+        }
+
+        .navbar-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar-links a {
+            color: #d4d4d4;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: color 0.3s;
+        }
+
+        .navbar-links a:hover {
+            color: #FFD343;
+            background: rgba(255, 211, 67, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .forums-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .forums-header h1 {
+            color: #FFD343;
+            margin: 0;
+        }
+
+        .new-post-btn {
+            background: #3672a5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .new-post-btn:hover {
+            background: #4a8ec5;
+        }
+
+        .new-post-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .post-list {
+            background: #252526;
+            border-radius: 8px;
+        }
+
+        .post-item {
+            padding: 20px;
+            border-bottom: 1px solid #3e3e3e;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .post-item:last-child {
+            border-bottom: none;
+        }
+
+        .post-item:hover {
+            background: rgba(255, 211, 67, 0.05);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .post-title {
+            font-size: 20px;
+            color: #FFD343;
+            margin: 0 0 8px 0;
+        }
+
+        .post-meta {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .post-meta i {
+            margin-right: 5px;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .post-stats span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-view {
+            background: #252526;
+            border-radius: 8px;
+            padding: 30px;
+        }
+
+        .post-view-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #3e3e3e;
+        }
+
+        .post-view-title {
+            font-size: 32px;
+            color: #FFD343;
+            margin: 0 0 15px 0;
+        }
+
+        .post-content {
+            line-height: 1.8;
+            color: #d4d4d4;
+            margin-bottom: 30px;
+        }
+
+        .post-content p {
+            margin-bottom: 15px;
+        }
+
+        .post-content code {
+            background: #2d2d2d;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #FFD343;
+            font-family: 'Courier New', monospace;
+        }
+
+        .post-content pre {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 3px solid #3672a5;
+            margin: 15px 0;
+        }
+
+        .post-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .replies-section {
+            margin-top: 40px;
+        }
+
+        .replies-header {
+            font-size: 20px;
+            color: #FFD343;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3e3e3e;
+        }
+
+        .reply-item {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 3px solid #3672a5;
+        }
+
+        .reply-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .reply-author {
+            color: #3672a5;
+            font-weight: bold;
+        }
+
+        .reply-content {
+            color: #d4d4d4;
+            line-height: 1.6;
+        }
+
+        .reply-form {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #3e3e3e;
+        }
+
+        .reply-form h3 {
+            color: #FFD343;
+            margin-bottom: 15px;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #252526;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #FFD343;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #d4d4d4;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #d4d4d4;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #2d2d2d;
+            border: 1px solid #3e3e3e;
+            border-radius: 5px;
+            color: #d4d4d4;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #3672a5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4a8ec5;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .auth-message {
+            background: rgba(255, 211, 67, 0.1);
+            border: 1px solid #FFD343;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #FFD343;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" style="text-decoration: none; display: flex; align-items: center;">
+            <h1 style="color: #FFD343;"> Py</h1> <h1 style="color: #3672a5;"> 1iner</h1>
+        </a>
+        <div class="nav-links" style="display: flex; gap: 15px; align-items: center;">
+            <a href="/" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Home</a>
+            <a href="/challenges" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Challenges</a>
+            <a href="/wiki" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Wiki</a>
+            <a href="/forums" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Forums</a>
+            <a href="/creator" style="color: #d4d4d4; text-decoration: none; padding: 8px 16px; border-radius: 5px; transition: all 0.3s;">Create</a>
+        </div>
+        <div class="user-menu">
+            <div class="user-menu-trigger" onclick="toggleUserMenu()">
+                <i class="fas fa-user-circle"></i>
+                {% if user %}
+                    <span>Welcome, <strong>{{ user.username }}</strong></span>
+                {% else %}
+                    <span>Welcome, <strong>Guest</strong></span>
+                {% endif %}
+                <i class="fas fa-chevron-down arrow"></i>
+            </div>
+            <div class="user-dropdown" id="user-dropdown">
+                <div class="user-dropdown-header">
+                    {% if user %}
+                        <div style="color: #d4d4d4; font-weight: 500; margin-bottom: 4px;">{{ user.username }}</div>
+                    {% else %}
+                        <div style="color: #d4d4d4; font-weight: 500; margin-bottom: 4px;">Guest</div>
+                    {% endif %}
+                </div>
+                <div class="user-dropdown-menu">
+                    <button class="user-dropdown-item" onclick="window.location.href='/challenges'">
+                        <i class="fas fa-code"></i>
+                        <span>Challenges</span>
+                    </button>
+                    <button class="user-dropdown-item" onclick="window.location.href='/wiki'">
+                        <i class="fas fa-book"></i>
+                        <span>Wiki</span>
+                    </button>
+                    {% if user %}
+                        <button class="user-dropdown-item logout" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    {% else %}
+                        <button class="user-dropdown-item" onclick="window.location.href='/login'">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>Login</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="forums-header">
+            <h1>Community Forums</h1>
+            <button class="new-post-btn" id="new-post-btn" onclick="showNewPostModal()">
+                <i class="fas fa-plus"></i> New Discussion
+            </button>
+        </div>
+
+        <div id="forum-view">
+            <!-- Forum posts will be loaded here -->
+        </div>
+    </div>
+
+    <!-- New Post Modal -->
+    <div class="modal" id="post-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Discussion</h2>
+                <button class="close-btn" onclick="closePostModal()">&times;</button>
+            </div>
+            <form id="post-form" onsubmit="createPost(event)">
+                <div class="form-group">
+                    <label for="post-title">Title:</label>
+                    <input type="text" id="post-title" required placeholder="What's your question or topic?">
+                </div>
+                <div class="form-group">
+                    <label for="post-content">Content (Markdown supported):</label>
+                    <textarea id="post-content" required placeholder="Describe your question or start the discussion..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePostModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentPost = null;
+
+        // Check if user is logged in
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/me');
+                const data = await response.json();
+                currentUser = data.user;
+                
+                const newPostBtn = document.getElementById('new-post-btn');
+                if (!currentUser) {
+                    newPostBtn.disabled = true;
+                    newPostBtn.title = 'Please login to create a post';
+                }
+            } catch (error) {
+                console.error('Error checking auth:', error);
+            }
+        }
+
+        // Load all forum posts
+        async function loadPosts() {
+            try {
+                const response = await fetch('/api/forums/posts');
+                const posts = await response.json();
+                
+                const forumView = document.getElementById('forum-view');
+                
+                if (posts.length === 0) {
+                    forumView.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-comments"></i>
+                            <h2>No Discussions Yet</h2>
+                            <p>Be the first to start a discussion!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                forumView.innerHTML = '<div class="post-list"></div>';
+                const postList = forumView.querySelector('.post-list');
+                
+                posts.forEach(post => {
+                    const postItem = document.createElement('div');
+                    postItem.className = 'post-item';
+                    postItem.onclick = () => loadPost(post.id);
+                    
+                    const date = new Date(post.updated_at).toLocaleDateString();
+                    
+                    postItem.innerHTML = `
+                        <div class="post-header">
+                            <div>
+                                <h3 class="post-title">${escapeHtml(post.title)}</h3>
+                                <div class="post-meta">
+                                    <i class="fas fa-user"></i> ${escapeHtml(post.username)}
+                                    <span style="margin: 0 10px;">•</span>
+                                    <i class="fas fa-clock"></i> ${date}
+                                </div>
+                            </div>
+                            <div class="post-stats">
+                                <span><i class="fas fa-comments"></i> ${post.reply_count} replies</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    postList.appendChild(postItem);
+                });
+            } catch (error) {
+                console.error('Error loading posts:', error);
+            }
+        }
+
+        // Load a specific post with replies
+        async function loadPost(postId) {
+            try {
+                const response = await fetch(`/api/forums/post/${postId}`);
+                const post = await response.json();
+                
+                if (!response.ok) {
+                    alert('Post not found');
+                    return;
+                }
+                
+                currentPost = post;
+                const forumView = document.getElementById('forum-view');
+                
+                const date = new Date(post.created_at).toLocaleDateString();
+                const htmlContent = marked.parse(post.content);
+                
+                let repliesHtml = '';
+                if (post.replies && post.replies.length > 0) {
+                    repliesHtml = `
+                        <div class="replies-section">
+                            <h3 class="replies-header">${post.replies.length} Replies</h3>
+                            ${post.replies.map(reply => {
+                                const replyDate = new Date(reply.created_at).toLocaleDateString();
+                                const replyHtml = marked.parse(reply.content);
+                                return `
+                                    <div class="reply-item">
+                                        <div class="reply-header">
+                                            <span class="reply-author">${escapeHtml(reply.username)}</span>
+                                            <span>${replyDate}</span>
+                                        </div>
+                                        <div class="reply-content">${replyHtml}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `;
+                }
+                
+                let replyFormHtml = '';
+                if (currentUser) {
+                    replyFormHtml = `
+                        <div class="reply-form">
+                            <h3>Add a Reply</h3>
+                            <form onsubmit="submitReply(event)">
+                                <div class="form-group">
+                                    <textarea id="reply-content" required placeholder="Write your reply..."></textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Post Reply</button>
+                                </div>
+                            </form>
+                        </div>
+                    `;
+                } else {
+                    replyFormHtml = `
+                        <div class="auth-message">
+                            <i class="fas fa-info-circle"></i> Please <a href="/login" style="color: #FFD343;">login</a> to reply to this discussion.
+                        </div>
+                    `;
+                }
+                
+                forumView.innerHTML = `
+                    <button class="back-btn" onclick="loadPosts()">
+                        <i class="fas fa-arrow-left"></i> Back to Forums
+                    </button>
+                    <div class="post-view">
+                        <div class="post-view-header">
+                            <h2 class="post-view-title">${escapeHtml(post.title)}</h2>
+                            <div class="post-meta">
+                                <i class="fas fa-user"></i> ${escapeHtml(post.username)}
+                                <span style="margin: 0 10px;">•</span>
+                                <i class="fas fa-clock"></i> ${date}
+                            </div>
+                        </div>
+                        <div class="post-content">${htmlContent}</div>
+                        ${repliesHtml}
+                        ${replyFormHtml}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading post:', error);
+            }
+        }
+
+        function showNewPostModal() {
+            if (!currentUser) {
+                alert('Please login to create a post');
+                return;
+            }
+            document.getElementById('post-modal').classList.add('show');
+        }
+
+        function closePostModal() {
+            document.getElementById('post-modal').classList.remove('show');
+            document.getElementById('post-form').reset();
+        }
+
+        async function createPost(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('post-title').value;
+            const content = document.getElementById('post-content').value;
+            
+            try {
+                const response = await fetch('/api/forums/post', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    closePostModal();
+                    await loadPosts();
+                    loadPost(data.post_id);
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to create post');
+                }
+            } catch (error) {
+                alert('Error creating post: ' + error.message);
+            }
+        }
+
+        async function submitReply(event) {
+            event.preventDefault();
+            
+            const content = document.getElementById('reply-content').value;
+            
+            try {
+                const response = await fetch(`/api/forums/post/${currentPost.id}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                
+                if (response.ok) {
+                    loadPost(currentPost.id);
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to post reply');
+                }
+            } catch (error) {
+                alert('Error posting reply: ' + error.message);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // User menu dropdown
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('user-dropdown');
+            const trigger = document.querySelector('.user-menu-trigger');
+            dropdown.classList.toggle('show');
+            trigger.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu && !userMenu.contains(event.target)) {
+                const dropdown = document.getElementById('user-dropdown');
+                const trigger = document.querySelector('.user-menu-trigger');
+                if (dropdown && dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                    trigger.classList.remove('active');
+                }
+            }
+        });
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.href = '/login';
+                } else {
+                    alert('Logout failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Logout failed. Please try again.');
+            }
+        }
+
+        function logout() {
+            handleLogout();
+        }
+
+        // Initialize
+        checkAuth();
+        loadPosts();
+    </script>
+</body>
+</html>
