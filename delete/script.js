@@ -15,8 +15,10 @@ const angleStep = 360 / cards.length;
 function updateCards() {
     cards.forEach((card, i) => {
         const angle = (i * angleStep) + rotationY;
+        // Check if card is being hovered
+        const scale = card.matches(':hover') ? 1.15 : 1;
         // The magic: Rotate the ring, but counter-rotate the card so it faces us
-        card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px) rotateY(${-angle}deg)`;
+        card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px) rotateY(${-angle}deg) scale3d(${scale}, ${scale}, ${scale})`;
         
         // Simple Opacity/Z-index trick for realism
         const normalizedAngle = ((angle % 360) + 360) % 360;
@@ -46,6 +48,12 @@ window.addEventListener('mouseup', () => isDragging = false);
 
 // 3. Initial placement
 updateCards();
+
+// Add hover listeners to trigger updateCards
+cards.forEach(card => {
+    card.addEventListener('mouseenter', updateCards);
+    card.addEventListener('mouseleave', updateCards);
+});
 
 // 4. Unlock Logic
 goBtn.addEventListener('click', () => {
